@@ -20,70 +20,92 @@ SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
+CREATE OR REPLACE FUNCTION create_constraint_if_not_exists(t_name text, c_name text, constraint_sql text)
+    RETURNS void
+AS
+$BODY$
+BEGIN
+    IF NOT EXISTS (SELECT constraint_name
+                   FROM information_schema.constraint_column_usage
+                   WHERE constraint_name = c_name) THEN
+        EXECUTE 'ALTER TABLE ' || t_name || ' ADD CONSTRAINT ' || c_name || ' ' || constraint_sql;
+    END IF;
+END;
+$BODY$
+    LANGUAGE plpgsql VOLATILE;
+
 --
 -- Name: VPOIS; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public."VPOIS" (
-    code character varying(255) NOT NULL,
-    name character varying(255),
-    web character varying(255),
+CREATE TABLE IF NOT EXISTS public."VPOIS"
+(
+    code  character varying(255) NOT NULL,
+    name  character varying(255),
+    web   character varying(255),
     email character varying(255),
     phone character varying(255)
 );
 
 
-ALTER TABLE public."VPOIS" OWNER TO directus;
+ALTER TABLE public."VPOIS"
+    OWNER TO directus;
 
 --
 -- Name: addiction; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.addiction (
+CREATE TABLE IF NOT EXISTS public.addiction
+(
     code character varying(255) NOT NULL,
     name character varying(255) NOT NULL
 );
 
 
-ALTER TABLE public.addiction OWNER TO directus;
+ALTER TABLE public.addiction
+    OWNER TO directus;
 
 --
 -- Name: atc; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.atc (
-    atc character varying(255) NOT NULL,
-    nt character varying(255) NOT NULL,
-    name character varying(255) NOT NULL,
+CREATE TABLE IF NOT EXISTS public.atc
+(
+    atc     character varying(255)                                 NOT NULL,
+    nt      character varying(255)                                 NOT NULL,
+    name    character varying(255)                                 NOT NULL,
     name_en character varying(255) DEFAULT NULL::character varying NOT NULL
 );
 
 
-ALTER TABLE public.atc OWNER TO directus;
+ALTER TABLE public.atc
+    OWNER TO directus;
 
 --
 -- Name: composition; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.composition (
-    id integer NOT NULL,
-    code character varying(7) NOT NULL,
-    ingredient character varying(255),
-    "order" integer NOT NULL,
-    sign character varying(255),
+CREATE TABLE IF NOT EXISTS public.composition
+(
+    id          integer              NOT NULL,
+    code        character varying(7) NOT NULL,
+    ingredient  character varying(255),
+    "order"     integer              NOT NULL,
+    sign        character varying(255),
     amount_from character varying(255),
-    amount character varying(255),
-    unit character varying(255)
+    amount      character varying(255),
+    unit        character varying(255)
 );
 
 
-ALTER TABLE public.composition OWNER TO directus;
+ALTER TABLE public.composition
+    OWNER TO directus;
 
 --
 -- Name: composition_id_seq; Type: SEQUENCE; Schema: public; Owner: directus
 --
 
-CREATE SEQUENCE public.composition_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.composition_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -105,53 +127,59 @@ ALTER SEQUENCE public.composition_id_seq OWNED BY public.composition.id;
 -- Name: composition_sign; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.composition_sign (
-    code character varying(255) NOT NULL,
-    description text NOT NULL
+CREATE TABLE IF NOT EXISTS public.composition_sign
+(
+    code        character varying(255) NOT NULL,
+    description text                   NOT NULL
 );
 
 
-ALTER TABLE public.composition_sign OWNER TO directus;
+ALTER TABLE public.composition_sign
+    OWNER TO directus;
 
 --
 -- Name: country; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.country (
-    code character varying(255) NOT NULL,
-    name character varying(255),
-    edqm character varying(255),
+CREATE TABLE IF NOT EXISTS public.country
+(
+    code    character varying(255) NOT NULL,
+    name    character varying(255),
+    edqm    character varying(255),
     name_en character varying(255) DEFAULT NULL::character varying
 );
 
 
-ALTER TABLE public.country OWNER TO directus;
+ALTER TABLE public.country
+    OWNER TO directus;
 
 --
 -- Name: directus_activity; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_activity (
-    id integer NOT NULL,
-    action character varying(45) NOT NULL,
-    "user" uuid,
+CREATE TABLE IF NOT EXISTS public.directus_activity
+(
+    id          integer                                            NOT NULL,
+    action      character varying(45)                              NOT NULL,
+    "user"      uuid,
     "timestamp" timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    ip character varying(50),
-    user_agent text,
-    collection character varying(64) NOT NULL,
-    item character varying(255) NOT NULL,
-    comment text,
-    origin character varying(255)
+    ip          character varying(50),
+    user_agent  text,
+    collection  character varying(64)                              NOT NULL,
+    item        character varying(255)                             NOT NULL,
+    comment     text,
+    origin      character varying(255)
 );
 
 
-ALTER TABLE public.directus_activity OWNER TO directus;
+ALTER TABLE public.directus_activity
+    OWNER TO directus;
 
 --
 -- Name: directus_activity_id_seq; Type: SEQUENCE; Schema: public; Owner: directus
 --
 
-CREATE SEQUENCE public.directus_activity_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.directus_activity_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -173,98 +201,106 @@ ALTER SEQUENCE public.directus_activity_id_seq OWNED BY public.directus_activity
 -- Name: directus_collections; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_collections (
-    collection character varying(64) NOT NULL,
-    icon character varying(30),
-    note text,
-    display_template character varying(255),
-    hidden boolean DEFAULT false NOT NULL,
-    singleton boolean DEFAULT false NOT NULL,
-    translations json,
-    archive_field character varying(64),
-    archive_app_filter boolean DEFAULT true NOT NULL,
-    archive_value character varying(255),
-    unarchive_value character varying(255),
-    sort_field character varying(64),
-    accountability character varying(255) DEFAULT 'all'::character varying,
-    color character varying(255),
+CREATE TABLE IF NOT EXISTS public.directus_collections
+(
+    collection              character varying(64)                                    NOT NULL,
+    icon                    character varying(30),
+    note                    text,
+    display_template        character varying(255),
+    hidden                  boolean                DEFAULT false                     NOT NULL,
+    singleton               boolean                DEFAULT false                     NOT NULL,
+    translations            json,
+    archive_field           character varying(64),
+    archive_app_filter      boolean                DEFAULT true                      NOT NULL,
+    archive_value           character varying(255),
+    unarchive_value         character varying(255),
+    sort_field              character varying(64),
+    accountability          character varying(255) DEFAULT 'all'::character varying,
+    color                   character varying(255),
     item_duplication_fields json,
-    sort integer,
-    "group" character varying(64),
-    collapse character varying(255) DEFAULT 'open'::character varying NOT NULL,
-    preview_url character varying(255),
-    versioning boolean DEFAULT false NOT NULL
+    sort                    integer,
+    "group"                 character varying(64),
+    collapse                character varying(255) DEFAULT 'open'::character varying NOT NULL,
+    preview_url             character varying(255),
+    versioning              boolean                DEFAULT false                     NOT NULL
 );
 
 
-ALTER TABLE public.directus_collections OWNER TO directus;
+ALTER TABLE public.directus_collections
+    OWNER TO directus;
 
 --
 -- Name: directus_dashboards; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_dashboards (
-    id uuid NOT NULL,
-    name character varying(255) NOT NULL,
-    icon character varying(30) DEFAULT 'dashboard'::character varying NOT NULL,
-    note text,
+CREATE TABLE IF NOT EXISTS public.directus_dashboards
+(
+    id           uuid                                                            NOT NULL,
+    name         character varying(255)                                          NOT NULL,
+    icon         character varying(30)    DEFAULT 'dashboard'::character varying NOT NULL,
+    note         text,
     date_created timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     user_created uuid,
-    color character varying(255)
+    color        character varying(255)
 );
 
 
-ALTER TABLE public.directus_dashboards OWNER TO directus;
+ALTER TABLE public.directus_dashboards
+    OWNER TO directus;
 
 --
 -- Name: directus_extensions; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_extensions (
-    enabled boolean DEFAULT true NOT NULL,
-    id uuid NOT NULL,
-    folder character varying(255) NOT NULL,
-    source character varying(255) NOT NULL,
-    bundle uuid
+CREATE TABLE IF NOT EXISTS public.directus_extensions
+(
+    enabled boolean DEFAULT true   NOT NULL,
+    id      uuid                   NOT NULL,
+    folder  character varying(255) NOT NULL,
+    source  character varying(255) NOT NULL,
+    bundle  uuid
 );
 
 
-ALTER TABLE public.directus_extensions OWNER TO directus;
+ALTER TABLE public.directus_extensions
+    OWNER TO directus;
 
 --
 -- Name: directus_fields; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_fields (
-    id integer NOT NULL,
-    collection character varying(64) NOT NULL,
-    field character varying(64) NOT NULL,
-    special character varying(64),
-    interface character varying(64),
-    options json,
-    display character varying(64),
-    display_options json,
-    readonly boolean DEFAULT false NOT NULL,
-    hidden boolean DEFAULT false NOT NULL,
-    sort integer,
-    width character varying(30) DEFAULT 'full'::character varying,
-    translations json,
-    note text,
-    conditions json,
-    required boolean DEFAULT false,
-    "group" character varying(64),
-    validation json,
+CREATE TABLE IF NOT EXISTS public.directus_fields
+(
+    id                 integer                             NOT NULL,
+    collection         character varying(64)               NOT NULL,
+    field              character varying(64)               NOT NULL,
+    special            character varying(64),
+    interface          character varying(64),
+    options            json,
+    display            character varying(64),
+    display_options    json,
+    readonly           boolean               DEFAULT false NOT NULL,
+    hidden             boolean               DEFAULT false NOT NULL,
+    sort               integer,
+    width              character varying(30) DEFAULT 'full'::character varying,
+    translations       json,
+    note               text,
+    conditions         json,
+    required           boolean               DEFAULT false,
+    "group"            character varying(64),
+    validation         json,
     validation_message text
 );
 
 
-ALTER TABLE public.directus_fields OWNER TO directus;
+ALTER TABLE public.directus_fields
+    OWNER TO directus;
 
 --
 -- Name: directus_fields_id_seq; Type: SEQUENCE; Schema: public; Owner: directus
 --
 
-CREATE SEQUENCE public.directus_fields_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.directus_fields_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -286,107 +322,117 @@ ALTER SEQUENCE public.directus_fields_id_seq OWNED BY public.directus_fields.id;
 -- Name: directus_files; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_files (
-    id uuid NOT NULL,
-    storage character varying(255) NOT NULL,
-    filename_disk character varying(255),
-    filename_download character varying(255) NOT NULL,
-    title character varying(255),
-    type character varying(255),
-    folder uuid,
-    uploaded_by uuid,
-    uploaded_on timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    modified_by uuid,
-    modified_on timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    charset character varying(50),
-    filesize bigint,
-    width integer,
-    height integer,
-    duration integer,
-    embed character varying(200),
-    description text,
-    location text,
-    tags text,
-    metadata json,
-    focal_point_x integer,
-    focal_point_y integer
+CREATE TABLE IF NOT EXISTS public.directus_files
+(
+    id                uuid                                               NOT NULL,
+    storage           character varying(255)                             NOT NULL,
+    filename_disk     character varying(255),
+    filename_download character varying(255)                             NOT NULL,
+    title             character varying(255),
+    type              character varying(255),
+    folder            uuid,
+    uploaded_by       uuid,
+    uploaded_on       timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    modified_by       uuid,
+    modified_on       timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    charset           character varying(50),
+    filesize          bigint,
+    width             integer,
+    height            integer,
+    duration          integer,
+    embed             character varying(200),
+    description       text,
+    location          text,
+    tags              text,
+    metadata          json,
+    focal_point_x     integer,
+    focal_point_y     integer
 );
 
 
-ALTER TABLE public.directus_files OWNER TO directus;
+ALTER TABLE public.directus_files
+    OWNER TO directus;
 
 --
 -- Name: directus_flows; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_flows (
-    id uuid NOT NULL,
-    name character varying(255) NOT NULL,
-    icon character varying(30),
-    color character varying(255),
-    description text,
-    status character varying(255) DEFAULT 'active'::character varying NOT NULL,
-    trigger character varying(255),
-    accountability character varying(255) DEFAULT 'all'::character varying,
-    options json,
-    operation uuid,
-    date_created timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    user_created uuid
+CREATE TABLE IF NOT EXISTS public.directus_flows
+(
+    id             uuid                                                         NOT NULL,
+    name           character varying(255)                                       NOT NULL,
+    icon           character varying(30),
+    color          character varying(255),
+    description    text,
+    status         character varying(255)   DEFAULT 'active'::character varying NOT NULL,
+    trigger        character varying(255),
+    accountability character varying(255)   DEFAULT 'all'::character varying,
+    options        json,
+    operation      uuid,
+    date_created   timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    user_created   uuid
 );
 
 
-ALTER TABLE public.directus_flows OWNER TO directus;
+ALTER TABLE public.directus_flows
+    OWNER TO directus;
 
 --
 -- Name: directus_folders; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_folders (
-    id uuid NOT NULL,
-    name character varying(255) NOT NULL,
+CREATE TABLE IF NOT EXISTS public.directus_folders
+(
+    id     uuid                   NOT NULL,
+    name   character varying(255) NOT NULL,
     parent uuid
 );
 
 
-ALTER TABLE public.directus_folders OWNER TO directus;
+ALTER TABLE public.directus_folders
+    OWNER TO directus;
 
 --
 -- Name: directus_migrations; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_migrations (
-    version character varying(255) NOT NULL,
-    name character varying(255) NOT NULL,
+CREATE TABLE IF NOT EXISTS public.directus_migrations
+(
+    version     character varying(255) NOT NULL,
+    name        character varying(255) NOT NULL,
     "timestamp" timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
-ALTER TABLE public.directus_migrations OWNER TO directus;
+ALTER TABLE public.directus_migrations
+    OWNER TO directus;
 
 --
 -- Name: directus_notifications; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_notifications (
-    id integer NOT NULL,
+CREATE TABLE IF NOT EXISTS public.directus_notifications
+(
+    id          integer                NOT NULL,
     "timestamp" timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    status character varying(255) DEFAULT 'inbox'::character varying,
-    recipient uuid NOT NULL,
-    sender uuid,
-    subject character varying(255) NOT NULL,
-    message text,
-    collection character varying(64),
-    item character varying(255)
+    status      character varying(255)   DEFAULT 'inbox'::character varying,
+    recipient   uuid                   NOT NULL,
+    sender      uuid,
+    subject     character varying(255) NOT NULL,
+    message     text,
+    collection  character varying(64),
+    item        character varying(255)
 );
 
 
-ALTER TABLE public.directus_notifications OWNER TO directus;
+ALTER TABLE public.directus_notifications
+    OWNER TO directus;
 
 --
 -- Name: directus_notifications_id_seq; Type: SEQUENCE; Schema: public; Owner: directus
 --
 
-CREATE SEQUENCE public.directus_notifications_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.directus_notifications_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -408,72 +454,78 @@ ALTER SEQUENCE public.directus_notifications_id_seq OWNED BY public.directus_not
 -- Name: directus_operations; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_operations (
-    id uuid NOT NULL,
-    name character varying(255),
-    key character varying(255) NOT NULL,
-    type character varying(255) NOT NULL,
-    position_x integer NOT NULL,
-    position_y integer NOT NULL,
-    options json,
-    resolve uuid,
-    reject uuid,
-    flow uuid NOT NULL,
+CREATE TABLE IF NOT EXISTS public.directus_operations
+(
+    id           uuid                   NOT NULL,
+    name         character varying(255),
+    key          character varying(255) NOT NULL,
+    type         character varying(255) NOT NULL,
+    position_x   integer                NOT NULL,
+    position_y   integer                NOT NULL,
+    options      json,
+    resolve      uuid,
+    reject       uuid,
+    flow         uuid                   NOT NULL,
     date_created timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     user_created uuid
 );
 
 
-ALTER TABLE public.directus_operations OWNER TO directus;
+ALTER TABLE public.directus_operations
+    OWNER TO directus;
 
 --
 -- Name: directus_panels; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_panels (
-    id uuid NOT NULL,
-    dashboard uuid NOT NULL,
-    name character varying(255),
-    icon character varying(30) DEFAULT NULL::character varying,
-    color character varying(10),
-    show_header boolean DEFAULT false NOT NULL,
-    note text,
-    type character varying(255) NOT NULL,
-    position_x integer NOT NULL,
-    position_y integer NOT NULL,
-    width integer NOT NULL,
-    height integer NOT NULL,
-    options json,
+CREATE TABLE IF NOT EXISTS public.directus_panels
+(
+    id           uuid                                   NOT NULL,
+    dashboard    uuid                                   NOT NULL,
+    name         character varying(255),
+    icon         character varying(30)    DEFAULT NULL::character varying,
+    color        character varying(10),
+    show_header  boolean                  DEFAULT false NOT NULL,
+    note         text,
+    type         character varying(255)                 NOT NULL,
+    position_x   integer                                NOT NULL,
+    position_y   integer                                NOT NULL,
+    width        integer                                NOT NULL,
+    height       integer                                NOT NULL,
+    options      json,
     date_created timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     user_created uuid
 );
 
 
-ALTER TABLE public.directus_panels OWNER TO directus;
+ALTER TABLE public.directus_panels
+    OWNER TO directus;
 
 --
 -- Name: directus_permissions; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_permissions (
-    id integer NOT NULL,
-    role uuid,
-    collection character varying(64) NOT NULL,
-    action character varying(10) NOT NULL,
+CREATE TABLE IF NOT EXISTS public.directus_permissions
+(
+    id          integer               NOT NULL,
+    role        uuid,
+    collection  character varying(64) NOT NULL,
+    action      character varying(10) NOT NULL,
     permissions json,
-    validation json,
-    presets json,
-    fields text
+    validation  json,
+    presets     json,
+    fields      text
 );
 
 
-ALTER TABLE public.directus_permissions OWNER TO directus;
+ALTER TABLE public.directus_permissions
+    OWNER TO directus;
 
 --
 -- Name: directus_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: directus
 --
 
-CREATE SEQUENCE public.directus_permissions_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.directus_permissions_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -495,30 +547,32 @@ ALTER SEQUENCE public.directus_permissions_id_seq OWNED BY public.directus_permi
 -- Name: directus_presets; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_presets (
-    id integer NOT NULL,
-    bookmark character varying(255),
-    "user" uuid,
-    role uuid,
-    collection character varying(64),
-    search character varying(100),
-    layout character varying(100) DEFAULT 'tabular'::character varying,
-    layout_query json,
-    layout_options json,
+CREATE TABLE IF NOT EXISTS public.directus_presets
+(
+    id               integer NOT NULL,
+    bookmark         character varying(255),
+    "user"           uuid,
+    role             uuid,
+    collection       character varying(64),
+    search           character varying(100),
+    layout           character varying(100) DEFAULT 'tabular'::character varying,
+    layout_query     json,
+    layout_options   json,
     refresh_interval integer,
-    filter json,
-    icon character varying(30) DEFAULT 'bookmark'::character varying,
-    color character varying(255)
+    filter           json,
+    icon             character varying(30)  DEFAULT 'bookmark'::character varying,
+    color            character varying(255)
 );
 
 
-ALTER TABLE public.directus_presets OWNER TO directus;
+ALTER TABLE public.directus_presets
+    OWNER TO directus;
 
 --
 -- Name: directus_presets_id_seq; Type: SEQUENCE; Schema: public; Owner: directus
 --
 
-CREATE SEQUENCE public.directus_presets_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.directus_presets_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -540,27 +594,29 @@ ALTER SEQUENCE public.directus_presets_id_seq OWNED BY public.directus_presets.i
 -- Name: directus_relations; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_relations (
-    id integer NOT NULL,
-    many_collection character varying(64) NOT NULL,
-    many_field character varying(64) NOT NULL,
-    one_collection character varying(64),
-    one_field character varying(64),
-    one_collection_field character varying(64),
+CREATE TABLE IF NOT EXISTS public.directus_relations
+(
+    id                      integer                                                     NOT NULL,
+    many_collection         character varying(64)                                       NOT NULL,
+    many_field              character varying(64)                                       NOT NULL,
+    one_collection          character varying(64),
+    one_field               character varying(64),
+    one_collection_field    character varying(64),
     one_allowed_collections text,
-    junction_field character varying(64),
-    sort_field character varying(64),
-    one_deselect_action character varying(255) DEFAULT 'nullify'::character varying NOT NULL
+    junction_field          character varying(64),
+    sort_field              character varying(64),
+    one_deselect_action     character varying(255) DEFAULT 'nullify'::character varying NOT NULL
 );
 
 
-ALTER TABLE public.directus_relations OWNER TO directus;
+ALTER TABLE public.directus_relations
+    OWNER TO directus;
 
 --
 -- Name: directus_relations_id_seq; Type: SEQUENCE; Schema: public; Owner: directus
 --
 
-CREATE SEQUENCE public.directus_relations_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.directus_relations_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -582,25 +638,27 @@ ALTER SEQUENCE public.directus_relations_id_seq OWNED BY public.directus_relatio
 -- Name: directus_revisions; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_revisions (
-    id integer NOT NULL,
-    activity integer NOT NULL,
-    collection character varying(64) NOT NULL,
-    item character varying(255) NOT NULL,
-    data json,
-    delta json,
-    parent integer,
-    version uuid
+CREATE TABLE IF NOT EXISTS public.directus_revisions
+(
+    id         integer                NOT NULL,
+    activity   integer                NOT NULL,
+    collection character varying(64)  NOT NULL,
+    item       character varying(255) NOT NULL,
+    data       json,
+    delta      json,
+    parent     integer,
+    version    uuid
 );
 
 
-ALTER TABLE public.directus_revisions OWNER TO directus;
+ALTER TABLE public.directus_revisions
+    OWNER TO directus;
 
 --
 -- Name: directus_revisions_id_seq; Type: SEQUENCE; Schema: public; Owner: directus
 --
 
-CREATE SEQUENCE public.directus_revisions_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.directus_revisions_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -622,86 +680,92 @@ ALTER SEQUENCE public.directus_revisions_id_seq OWNED BY public.directus_revisio
 -- Name: directus_roles; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_roles (
-    id uuid NOT NULL,
-    name character varying(100) NOT NULL,
-    icon character varying(30) DEFAULT 'supervised_user_circle'::character varying NOT NULL,
-    description text,
-    ip_access text,
-    enforce_tfa boolean DEFAULT false NOT NULL,
-    admin_access boolean DEFAULT false NOT NULL,
-    app_access boolean DEFAULT true NOT NULL
+CREATE TABLE IF NOT EXISTS public.directus_roles
+(
+    id           uuid                                                                      NOT NULL,
+    name         character varying(100)                                                    NOT NULL,
+    icon         character varying(30) DEFAULT 'supervised_user_circle'::character varying NOT NULL,
+    description  text,
+    ip_access    text,
+    enforce_tfa  boolean               DEFAULT false                                       NOT NULL,
+    admin_access boolean               DEFAULT false                                       NOT NULL,
+    app_access   boolean               DEFAULT true                                        NOT NULL
 );
 
 
-ALTER TABLE public.directus_roles OWNER TO directus;
+ALTER TABLE public.directus_roles
+    OWNER TO directus;
 
 --
 -- Name: directus_sessions; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_sessions (
-    token character varying(64) NOT NULL,
-    "user" uuid,
-    expires timestamp with time zone NOT NULL,
-    ip character varying(255),
+CREATE TABLE IF NOT EXISTS public.directus_sessions
+(
+    token      character varying(64)    NOT NULL,
+    "user"     uuid,
+    expires    timestamp with time zone NOT NULL,
+    ip         character varying(255),
     user_agent text,
-    share uuid,
-    origin character varying(255),
+    share      uuid,
+    origin     character varying(255),
     next_token character varying(64)
 );
 
 
-ALTER TABLE public.directus_sessions OWNER TO directus;
+ALTER TABLE public.directus_sessions
+    OWNER TO directus;
 
 --
 -- Name: directus_settings; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_settings (
-    id integer NOT NULL,
-    project_name character varying(100) DEFAULT 'Directus'::character varying NOT NULL,
-    project_url character varying(255),
-    project_color character varying(255) DEFAULT '#6644FF'::character varying NOT NULL,
-    project_logo uuid,
-    public_foreground uuid,
-    public_background uuid,
-    public_note text,
-    auth_login_attempts integer DEFAULT 25,
-    auth_password_policy character varying(100),
-    storage_asset_transform character varying(7) DEFAULT 'all'::character varying,
-    storage_asset_presets json,
-    custom_css text,
-    storage_default_folder uuid,
-    basemaps json,
-    mapbox_key character varying(255),
-    module_bar json,
-    project_descriptor character varying(100),
-    default_language character varying(255) DEFAULT 'en-US'::character varying NOT NULL,
-    custom_aspect_ratios json,
-    public_favicon uuid,
-    default_appearance character varying(255) DEFAULT 'auto'::character varying NOT NULL,
-    default_theme_light character varying(255),
-    theme_light_overrides json,
-    default_theme_dark character varying(255),
-    theme_dark_overrides json,
-    report_error_url character varying(255),
-    report_bug_url character varying(255),
-    report_feature_url character varying(255),
-    public_registration boolean DEFAULT false NOT NULL,
-    public_registration_verify_email boolean DEFAULT true NOT NULL,
-    public_registration_role uuid,
+CREATE TABLE IF NOT EXISTS public.directus_settings
+(
+    id                               integer                                                      NOT NULL,
+    project_name                     character varying(100) DEFAULT 'Directus'::character varying NOT NULL,
+    project_url                      character varying(255),
+    project_color                    character varying(255) DEFAULT '#6644FF'::character varying  NOT NULL,
+    project_logo                     uuid,
+    public_foreground                uuid,
+    public_background                uuid,
+    public_note                      text,
+    auth_login_attempts              integer                DEFAULT 25,
+    auth_password_policy             character varying(100),
+    storage_asset_transform          character varying(7)   DEFAULT 'all'::character varying,
+    storage_asset_presets            json,
+    custom_css                       text,
+    storage_default_folder           uuid,
+    basemaps                         json,
+    mapbox_key                       character varying(255),
+    module_bar                       json,
+    project_descriptor               character varying(100),
+    default_language                 character varying(255) DEFAULT 'en-US'::character varying    NOT NULL,
+    custom_aspect_ratios             json,
+    public_favicon                   uuid,
+    default_appearance               character varying(255) DEFAULT 'auto'::character varying     NOT NULL,
+    default_theme_light              character varying(255),
+    theme_light_overrides            json,
+    default_theme_dark               character varying(255),
+    theme_dark_overrides             json,
+    report_error_url                 character varying(255),
+    report_bug_url                   character varying(255),
+    report_feature_url               character varying(255),
+    public_registration              boolean                DEFAULT false                         NOT NULL,
+    public_registration_verify_email boolean                DEFAULT true                          NOT NULL,
+    public_registration_role         uuid,
     public_registration_email_filter json
 );
 
 
-ALTER TABLE public.directus_settings OWNER TO directus;
+ALTER TABLE public.directus_settings
+    OWNER TO directus;
 
 --
 -- Name: directus_settings_id_seq; Type: SEQUENCE; Schema: public; Owner: directus
 --
 
-CREATE SEQUENCE public.directus_settings_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.directus_settings_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -723,85 +787,92 @@ ALTER SEQUENCE public.directus_settings_id_seq OWNED BY public.directus_settings
 -- Name: directus_shares; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_shares (
-    id uuid NOT NULL,
-    name character varying(255),
-    collection character varying(64) NOT NULL,
-    item character varying(255) NOT NULL,
-    role uuid,
-    password character varying(255),
+CREATE TABLE IF NOT EXISTS public.directus_shares
+(
+    id           uuid                   NOT NULL,
+    name         character varying(255),
+    collection   character varying(64)  NOT NULL,
+    item         character varying(255) NOT NULL,
+    role         uuid,
+    password     character varying(255),
     user_created uuid,
     date_created timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    date_start timestamp with time zone,
-    date_end timestamp with time zone,
-    times_used integer DEFAULT 0,
-    max_uses integer
+    date_start   timestamp with time zone,
+    date_end     timestamp with time zone,
+    times_used   integer                  DEFAULT 0,
+    max_uses     integer
 );
 
 
-ALTER TABLE public.directus_shares OWNER TO directus;
+ALTER TABLE public.directus_shares
+    OWNER TO directus;
 
 --
 -- Name: directus_translations; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_translations (
-    id uuid NOT NULL,
+CREATE TABLE IF NOT EXISTS public.directus_translations
+(
+    id       uuid                   NOT NULL,
     language character varying(255) NOT NULL,
-    key character varying(255) NOT NULL,
-    value text NOT NULL
+    key      character varying(255) NOT NULL,
+    value    text                   NOT NULL
 );
 
 
-ALTER TABLE public.directus_translations OWNER TO directus;
+ALTER TABLE public.directus_translations
+    OWNER TO directus;
 
 --
 -- Name: directus_users; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_users (
-    id uuid NOT NULL,
-    first_name character varying(50),
-    last_name character varying(50),
-    email character varying(128),
-    password character varying(255),
-    location character varying(255),
-    title character varying(50),
-    description text,
-    tags json,
-    avatar uuid,
-    language character varying(255) DEFAULT NULL::character varying,
-    tfa_secret character varying(255),
-    status character varying(16) DEFAULT 'active'::character varying NOT NULL,
-    role uuid,
-    token character varying(255),
-    last_access timestamp with time zone,
-    last_page character varying(255),
-    provider character varying(128) DEFAULT 'default'::character varying NOT NULL,
-    external_identifier character varying(255),
-    auth_data json,
-    email_notifications boolean DEFAULT true,
-    appearance character varying(255),
-    theme_dark character varying(255),
-    theme_light character varying(255),
+CREATE TABLE IF NOT EXISTS public.directus_users
+(
+    id                    uuid                                                        NOT NULL,
+    first_name            character varying(50),
+    last_name             character varying(50),
+    email                 character varying(128),
+    password              character varying(255),
+    location              character varying(255),
+    title                 character varying(50),
+    description           text,
+    tags                  json,
+    avatar                uuid,
+    language              character varying(255) DEFAULT NULL::character varying,
+    tfa_secret            character varying(255),
+    status                character varying(16)  DEFAULT 'active'::character varying  NOT NULL,
+    role                  uuid,
+    token                 character varying(255),
+    last_access           timestamp with time zone,
+    last_page             character varying(255),
+    provider              character varying(128) DEFAULT 'default'::character varying NOT NULL,
+    external_identifier   character varying(255),
+    auth_data             json,
+    email_notifications   boolean                DEFAULT true,
+    appearance            character varying(255),
+    theme_dark            character varying(255),
+    theme_light           character varying(255),
     theme_light_overrides json,
-    theme_dark_overrides json
+    theme_dark_overrides  json
 );
 
 
-ALTER TABLE public.directus_users OWNER TO directus;
+ALTER TABLE public.directus_users
+    OWNER TO directus;
 
 --
 -- Name: directus_versions; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_versions (
-    id uuid NOT NULL,
-    key character varying(64) NOT NULL,
-    name character varying(255),
-    collection character varying(64) NOT NULL,
-    item character varying(255) NOT NULL,
-    hash character varying(255),
+CREATE TABLE IF NOT EXISTS public.directus_versions
+(
+    id           uuid                   NOT NULL,
+    key          character varying(64)  NOT NULL,
+    name         character varying(255),
+    collection   character varying(64)  NOT NULL,
+    item         character varying(255) NOT NULL,
+    hash         character varying(255),
     date_created timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     date_updated timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     user_created uuid,
@@ -809,34 +880,37 @@ CREATE TABLE public.directus_versions (
 );
 
 
-ALTER TABLE public.directus_versions OWNER TO directus;
+ALTER TABLE public.directus_versions
+    OWNER TO directus;
 
 --
 -- Name: directus_webhooks; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.directus_webhooks (
-    id integer NOT NULL,
-    name character varying(255) NOT NULL,
-    method character varying(10) DEFAULT 'POST'::character varying NOT NULL,
-    url character varying(255) NOT NULL,
-    status character varying(10) DEFAULT 'active'::character varying NOT NULL,
-    data boolean DEFAULT true NOT NULL,
-    actions character varying(100) NOT NULL,
-    collections character varying(255) NOT NULL,
-    headers json,
-    was_active_before_deprecation boolean DEFAULT false NOT NULL,
-    migrated_flow uuid
+CREATE TABLE IF NOT EXISTS public.directus_webhooks
+(
+    id                            integer                                                   NOT NULL,
+    name                          character varying(255)                                    NOT NULL,
+    method                        character varying(10) DEFAULT 'POST'::character varying   NOT NULL,
+    url                           character varying(255)                                    NOT NULL,
+    status                        character varying(10) DEFAULT 'active'::character varying NOT NULL,
+    data                          boolean               DEFAULT true                        NOT NULL,
+    actions                       character varying(100)                                    NOT NULL,
+    collections                   character varying(255)                                    NOT NULL,
+    headers                       json,
+    was_active_before_deprecation boolean               DEFAULT false                       NOT NULL,
+    migrated_flow                 uuid
 );
 
 
-ALTER TABLE public.directus_webhooks OWNER TO directus;
+ALTER TABLE public.directus_webhooks
+    OWNER TO directus;
 
 --
 -- Name: directus_webhooks_id_seq; Type: SEQUENCE; Schema: public; Owner: directus
 --
 
-CREATE SEQUENCE public.directus_webhooks_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.directus_webhooks_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -858,109 +932,119 @@ ALTER SEQUENCE public.directus_webhooks_id_seq OWNED BY public.directus_webhooks
 -- Name: dispense; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.dispense (
+CREATE TABLE IF NOT EXISTS public.dispense
+(
     code character varying(255) NOT NULL,
     name character varying(255) NOT NULL
 );
 
 
-ALTER TABLE public.dispense OWNER TO directus;
+ALTER TABLE public.dispense
+    OWNER TO directus;
 
 --
 -- Name: doping; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.doping (
+CREATE TABLE IF NOT EXISTS public.doping
+(
     doping character varying(255) NOT NULL,
-    name character varying(255)
+    name   character varying(255)
 );
 
 
-ALTER TABLE public.doping OWNER TO directus;
+ALTER TABLE public.doping
+    OWNER TO directus;
 
 --
 -- Name: dosage_form; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.dosage_form (
-    form character varying(255) NOT NULL,
-    name character varying(255) DEFAULT NULL::character varying,
-    edqm character varying(255),
+CREATE TABLE IF NOT EXISTS public.dosage_form
+(
+    form    character varying(255)                                 NOT NULL,
+    name    character varying(255) DEFAULT NULL::character varying,
+    edqm    character varying(255),
     name_en character varying(255) DEFAULT NULL::character varying NOT NULL
 );
 
 
-ALTER TABLE public.dosage_form OWNER TO directus;
+ALTER TABLE public.dosage_form
+    OWNER TO directus;
 
 --
 -- Name: drugs; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.drugs (
-    code character varying(255) NOT NULL,
-    notification_sign character varying(1),
-    name character varying(100) NOT NULL,
-    strength character varying(30),
-    form character varying(255),
-    package character varying(32),
-    route character varying(255),
-    complement character varying(100) NOT NULL,
-    dosage character varying(255),
-    organization character varying(255),
-    organization_country character varying(255),
-    actual_organization character varying(255),
-    actual_organization_country character varying(255),
-    registration_status character varying(255) NOT NULL,
-    valid_till date,
-    unlimited_registration character varying(1),
-    present_till date,
-    pharm_class character varying(255) NOT NULL,
-    atc character varying(255) NOT NULL,
-    registration_number character varying(32),
-    concurrent_import character varying(32),
+CREATE TABLE IF NOT EXISTS public.drugs
+(
+    code                           character varying(255) NOT NULL,
+    notification_sign              character varying(1),
+    name                           character varying(100) NOT NULL,
+    strength                       character varying(30),
+    form                           character varying(255),
+    package                        character varying(32),
+    route                          character varying(255),
+    complement                     character varying(100) NOT NULL,
+    dosage                         character varying(255),
+    organization                   character varying(255),
+    organization_country           character varying(255),
+    actual_organization            character varying(255),
+    actual_organization_country    character varying(255),
+    registration_status            character varying(255) NOT NULL,
+    valid_till                     date,
+    unlimited_registration         character varying(1),
+    present_till                   date,
+    pharm_class                    character varying(255) NOT NULL,
+    atc                            character varying(255) NOT NULL,
+    registration_number            character varying(32),
+    concurrent_import              character varying(32),
     concurrent_import_organization character varying(255),
-    concurrent_import_country character varying(255),
-    registration_procedure character varying(255),
-    daily_amount numeric(10,5) NOT NULL,
-    daily_unit character varying(255),
-    daily_count numeric(10,5) NOT NULL,
-    source character varying(255) NOT NULL,
-    dispense character varying(255),
-    addiction character varying(255),
-    doping character varying(255),
-    hormones character varying(255),
-    supplied character varying(1) NOT NULL,
-    "EAN" character varying(255),
-    brail_sign character varying(1),
-    expiration integer,
-    expiration_period character varying(1),
-    registration_name character varying(255) NOT NULL,
-    mrp_number character varying(255),
-    legal_registration_base character varying(255),
-    safety_element character varying(1)
+    concurrent_import_country      character varying(255),
+    registration_procedure         character varying(255),
+    daily_amount                   numeric(10, 5)         NOT NULL,
+    daily_unit                     character varying(255),
+    daily_count                    numeric(10, 5)         NOT NULL,
+    source                         character varying(255) NOT NULL,
+    dispense                       character varying(255),
+    addiction                      character varying(255),
+    doping                         character varying(255),
+    hormones                       character varying(255),
+    supplied                       character varying(1)   NOT NULL,
+    "EAN"                          character varying(255),
+    brail_sign                     character varying(1),
+    expiration                     integer,
+    expiration_period              character varying(1),
+    registration_name              character varying(255) NOT NULL,
+    mrp_number                     character varying(255),
+    legal_registration_base        character varying(255),
+    safety_element                 character varying(1)
 );
 
 
-ALTER TABLE public.drugs OWNER TO directus;
+ALTER TABLE public.drugs
+    OWNER TO directus;
 
 --
 -- Name: drugs_ingredients; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.drugs_ingredients (
-    id integer NOT NULL,
-    drugs_code character varying(255),
+CREATE TABLE IF NOT EXISTS public.drugs_ingredients
+(
+    id               integer NOT NULL,
+    drugs_code       character varying(255),
     ingredients_code character varying(255)
 );
 
 
-ALTER TABLE public.drugs_ingredients OWNER TO directus;
+ALTER TABLE public.drugs_ingredients
+    OWNER TO directus;
 
 --
 -- Name: drugs_ingredients_id_seq; Type: SEQUENCE; Schema: public; Owner: directus
 --
 
-CREATE SEQUENCE public.drugs_ingredients_id_seq
+CREATE SEQUENCE IF NOT EXISTS public.drugs_ingredients_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -982,279 +1066,291 @@ ALTER SEQUENCE public.drugs_ingredients_id_seq OWNED BY public.drugs_ingredients
 -- Name: forms; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.forms (
-    form character varying(255) NOT NULL,
-    name character varying(255) NOT NULL,
-    edqm character varying(255),
-    name_en character varying(255) DEFAULT NULL::character varying NOT NULL,
-    name_lat character varying(255),
-    is_cannabis boolean DEFAULT false NOT NULL
+CREATE TABLE IF NOT EXISTS public.forms
+(
+    form        character varying(255)                                 NOT NULL,
+    name        character varying(255)                                 NOT NULL,
+    edqm        character varying(255),
+    name_en     character varying(255) DEFAULT NULL::character varying NOT NULL,
+    name_lat    character varying(255),
+    is_cannabis boolean                DEFAULT false                   NOT NULL
 );
 
 
-ALTER TABLE public.forms OWNER TO directus;
+ALTER TABLE public.forms
+    OWNER TO directus;
 
 --
 -- Name: hormones; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.hormones (
+CREATE TABLE IF NOT EXISTS public.hormones
+(
     code character varying(255) NOT NULL,
     name character varying(255)
 );
 
 
-ALTER TABLE public.hormones OWNER TO directus;
+ALTER TABLE public.hormones
+    OWNER TO directus;
 
 --
 -- Name: ingredients; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.ingredients (
-    code character varying(255) NOT NULL,
-    source character varying(255) DEFAULT NULL::character varying,
-    name character varying(255),
+CREATE TABLE IF NOT EXISTS public.ingredients
+(
+    code      character varying(255) NOT NULL,
+    source    character varying(255) DEFAULT NULL::character varying,
+    name      character varying(255),
     addiction character varying(255),
-    doping character varying(255),
-    hormones character varying(255),
+    doping    character varying(255),
+    hormones  character varying(255),
     name_intl character varying(255) DEFAULT NULL::character varying,
-    name_en character varying(255) DEFAULT NULL::character varying
+    name_en   character varying(255) DEFAULT NULL::character varying
 );
 
 
-ALTER TABLE public.ingredients OWNER TO directus;
+ALTER TABLE public.ingredients
+    OWNER TO directus;
 
 --
 -- Name: legal_registration_base; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.legal_registration_base (
+CREATE TABLE IF NOT EXISTS public.legal_registration_base
+(
     code character varying(255) NOT NULL,
     name character varying(255) NOT NULL
 );
 
 
-ALTER TABLE public.legal_registration_base OWNER TO directus;
+ALTER TABLE public.legal_registration_base
+    OWNER TO directus;
 
 --
 -- Name: organization; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.organization (
-    code character varying(255) NOT NULL,
-    name character varying(255),
-    country character varying(255) NOT NULL,
+CREATE TABLE IF NOT EXISTS public.organization
+(
+    code         character varying(255) NOT NULL,
+    name         character varying(255),
+    country      character varying(255) NOT NULL,
     manufacturer character varying(255),
-    holder character varying(255)
+    holder       character varying(255)
 );
 
 
-ALTER TABLE public.organization OWNER TO directus;
+ALTER TABLE public.organization
+    OWNER TO directus;
 
 --
 -- Name: pharm_class; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.pharm_class (
+CREATE TABLE IF NOT EXISTS public.pharm_class
+(
     code character varying(255) NOT NULL,
     name character varying(255) NOT NULL
 );
 
 
-ALTER TABLE public.pharm_class OWNER TO directus;
+ALTER TABLE public.pharm_class
+    OWNER TO directus;
 
 --
 -- Name: registration_procedure; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.registration_procedure (
+CREATE TABLE IF NOT EXISTS public.registration_procedure
+(
     code character varying(255) NOT NULL,
     name character varying(255) NOT NULL
 );
 
 
-ALTER TABLE public.registration_procedure OWNER TO directus;
+ALTER TABLE public.registration_procedure
+    OWNER TO directus;
 
 --
 -- Name: registration_status; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.registration_status (
+CREATE TABLE IF NOT EXISTS public.registration_status
+(
     code character varying(255) NOT NULL,
     name character varying(255) NOT NULL
 );
 
 
-ALTER TABLE public.registration_status OWNER TO directus;
+ALTER TABLE public.registration_status
+    OWNER TO directus;
 
 --
 -- Name: routes; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.routes (
-    route character varying(255) NOT NULL,
-    name character varying(255) NOT NULL,
-    edqm character varying(255),
-    name_en character varying(255) DEFAULT NULL::character varying NOT NULL,
+CREATE TABLE IF NOT EXISTS public.routes
+(
+    route    character varying(255)                                 NOT NULL,
+    name     character varying(255)                                 NOT NULL,
+    edqm     character varying(255),
+    name_en  character varying(255) DEFAULT NULL::character varying NOT NULL,
     name_lat character varying(255) DEFAULT NULL::character varying NOT NULL
 );
 
 
-ALTER TABLE public.routes OWNER TO directus;
+ALTER TABLE public.routes
+    OWNER TO directus;
 
 --
 -- Name: source; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.source (
+CREATE TABLE IF NOT EXISTS public.source
+(
     code character varying(255) NOT NULL,
     name character varying(255) NOT NULL
 );
 
 
-ALTER TABLE public.source OWNER TO directus;
+ALTER TABLE public.source
+    OWNER TO directus;
 
 --
 -- Name: substance; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.substance (
-    code character varying(255) NOT NULL,
-    name character varying(255),
+CREATE TABLE IF NOT EXISTS public.substance
+(
+    code      character varying(255) NOT NULL,
+    name      character varying(255),
     addiction character varying(255),
     name_intl character varying(255) DEFAULT NULL::character varying,
-    name_en character varying(255) DEFAULT NULL::character varying
+    name_en   character varying(255) DEFAULT NULL::character varying
 );
 
 
-ALTER TABLE public.substance OWNER TO directus;
+ALTER TABLE public.substance
+    OWNER TO directus;
 
 --
 -- Name: units; Type: TABLE; Schema: public; Owner: directus
 --
 
-CREATE TABLE public.units (
+CREATE TABLE IF NOT EXISTS public.units
+(
     unit character varying(255) NOT NULL,
     name character varying(255) NOT NULL
 );
 
 
-ALTER TABLE public.units OWNER TO directus;
+ALTER TABLE public.units
+    OWNER TO directus;
 
 --
 -- Name: composition id; Type: DEFAULT; Schema: public; Owner: directus
 --
 
-ALTER TABLE ONLY public.composition ALTER COLUMN id SET DEFAULT nextval('public.composition_id_seq'::regclass);
+ALTER TABLE ONLY public.composition
+    ALTER COLUMN id SET DEFAULT nextval('public.composition_id_seq'::regclass);
 
 
 --
 -- Name: directus_activity id; Type: DEFAULT; Schema: public; Owner: directus
 --
 
-ALTER TABLE ONLY public.directus_activity ALTER COLUMN id SET DEFAULT nextval('public.directus_activity_id_seq'::regclass);
+ALTER TABLE ONLY public.directus_activity
+    ALTER COLUMN id SET DEFAULT nextval('public.directus_activity_id_seq'::regclass);
 
 
 --
 -- Name: directus_fields id; Type: DEFAULT; Schema: public; Owner: directus
 --
 
-ALTER TABLE ONLY public.directus_fields ALTER COLUMN id SET DEFAULT nextval('public.directus_fields_id_seq'::regclass);
+ALTER TABLE ONLY public.directus_fields
+    ALTER COLUMN id SET DEFAULT nextval('public.directus_fields_id_seq'::regclass);
 
 
 --
 -- Name: directus_notifications id; Type: DEFAULT; Schema: public; Owner: directus
 --
 
-ALTER TABLE ONLY public.directus_notifications ALTER COLUMN id SET DEFAULT nextval('public.directus_notifications_id_seq'::regclass);
+ALTER TABLE ONLY public.directus_notifications
+    ALTER COLUMN id SET DEFAULT nextval('public.directus_notifications_id_seq'::regclass);
 
 
 --
 -- Name: directus_permissions id; Type: DEFAULT; Schema: public; Owner: directus
 --
 
-ALTER TABLE ONLY public.directus_permissions ALTER COLUMN id SET DEFAULT nextval('public.directus_permissions_id_seq'::regclass);
+ALTER TABLE ONLY public.directus_permissions
+    ALTER COLUMN id SET DEFAULT nextval('public.directus_permissions_id_seq'::regclass);
 
 
 --
 -- Name: directus_presets id; Type: DEFAULT; Schema: public; Owner: directus
 --
 
-ALTER TABLE ONLY public.directus_presets ALTER COLUMN id SET DEFAULT nextval('public.directus_presets_id_seq'::regclass);
+ALTER TABLE ONLY public.directus_presets
+    ALTER COLUMN id SET DEFAULT nextval('public.directus_presets_id_seq'::regclass);
 
 
 --
 -- Name: directus_relations id; Type: DEFAULT; Schema: public; Owner: directus
 --
 
-ALTER TABLE ONLY public.directus_relations ALTER COLUMN id SET DEFAULT nextval('public.directus_relations_id_seq'::regclass);
+ALTER TABLE ONLY public.directus_relations
+    ALTER COLUMN id SET DEFAULT nextval('public.directus_relations_id_seq'::regclass);
 
 
 --
 -- Name: directus_revisions id; Type: DEFAULT; Schema: public; Owner: directus
 --
 
-ALTER TABLE ONLY public.directus_revisions ALTER COLUMN id SET DEFAULT nextval('public.directus_revisions_id_seq'::regclass);
+ALTER TABLE ONLY public.directus_revisions
+    ALTER COLUMN id SET DEFAULT nextval('public.directus_revisions_id_seq'::regclass);
 
 
 --
 -- Name: directus_settings id; Type: DEFAULT; Schema: public; Owner: directus
 --
 
-ALTER TABLE ONLY public.directus_settings ALTER COLUMN id SET DEFAULT nextval('public.directus_settings_id_seq'::regclass);
+ALTER TABLE ONLY public.directus_settings
+    ALTER COLUMN id SET DEFAULT nextval('public.directus_settings_id_seq'::regclass);
 
 
 --
 -- Name: directus_webhooks id; Type: DEFAULT; Schema: public; Owner: directus
 --
 
-ALTER TABLE ONLY public.directus_webhooks ALTER COLUMN id SET DEFAULT nextval('public.directus_webhooks_id_seq'::regclass);
+ALTER TABLE ONLY public.directus_webhooks
+    ALTER COLUMN id SET DEFAULT nextval('public.directus_webhooks_id_seq'::regclass);
 
 
 --
 -- Name: drugs_ingredients id; Type: DEFAULT; Schema: public; Owner: directus
 --
 
-ALTER TABLE ONLY public.drugs_ingredients ALTER COLUMN id SET DEFAULT nextval('public.drugs_ingredients_id_seq'::regclass);
-
-
---
--- Data for Name: VPOIS; Type: TABLE DATA; Schema: public; Owner: directus
---
-
-COPY public."VPOIS" (code, name, web, email, phone) FROM stdin;
-\.
-
-
---
--- Data for Name: addiction; Type: TABLE DATA; Schema: public; Owner: directus
---
-
-COPY public.addiction (code, name) FROM stdin;
-\.
-
-
---
--- Data for Name: atc; Type: TABLE DATA; Schema: public; Owner: directus
---
-
-COPY public.atc (atc, nt, name, name_en) FROM stdin;
-\.
-
-
---
--- Data for Name: composition; Type: TABLE DATA; Schema: public; Owner: directus
---
-
-COPY public.composition (id, code, ingredient, "order", sign, amount_from, amount, unit) FROM stdin;
-\.
-
+ALTER TABLE ONLY public.drugs_ingredients
+    ALTER COLUMN id SET DEFAULT nextval('public.drugs_ingredients_id_seq'::regclass);
 
 --
 -- Data for Name: directus_collections; Type: TABLE DATA; Schema: public; Owner: directus
 --
 
-COPY public.directus_collections (collection, icon, note, display_template, hidden, singleton, translations, archive_field, archive_app_filter, archive_value, unarchive_value, sort_field, accountability, color, item_duplication_fields, sort, "group", collapse, preview_url, versioning) FROM stdin;
+CREATE TEMP TABLE directus_collections_temp
+    ON COMMIT DROP
+AS
+SELECT *
+FROM public.directus_collections
+    WITH NO DATA;
+
+COPY directus_collections_temp (collection, icon, note, display_template, hidden, singleton, translations,
+                                archive_field, archive_app_filter, archive_value, unarchive_value, sort_field,
+                                accountability, color, item_duplication_fields, sort, "group", collapse, preview_url,
+                                versioning) FROM stdin;
 Sources	folder	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#2ECDA7	\N	6	\N	open	\N	f
 source	barcode	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#2ECDA7	\N	1	Sources	open	\N	f
 organization	account_balance	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#2ECDA7	\N	2	Sources	open	\N	f
@@ -1286,12 +1382,28 @@ drugs	pill	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#6644FF	\N	1	Drugs	open	\N	f
 drugs_ingredients	import_export	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#6644FF	\N	2	Drugs	open	\N	f
 \.
 
+INSERT INTO public.directus_collections
+SELECT *
+FROM directus_collections_temp
+ON CONFLICT DO NOTHING;
+
+DROP TABLE directus_collections_temp;
+
 
 --
 -- Data for Name: directus_fields; Type: TABLE DATA; Schema: public; Owner: directus
 --
 
-COPY public.directus_fields (id, collection, field, special, interface, options, display, display_options, readonly, hidden, sort, width, translations, note, conditions, required, "group", validation, validation_message) FROM stdin;
+CREATE TEMP TABLE directus_fields_temp
+    ON COMMIT DROP
+AS
+SELECT *
+FROM public.directus_fields
+    WITH NO DATA;
+
+COPY directus_fields_temp (id, collection, field, special, interface, options, display, display_options, readonly,
+                           hidden, sort, width, translations, note, conditions, required, "group", validation,
+                           validation_message) FROM stdin;
 178	drugs	effects	alias,no-data,group	group-detail	{"start":"closed"}	\N	\N	f	f	9	full	\N	\N	\N	f	\N	\N	\N
 86	composition	amount	\N	input	\N	formatted-value	{"format":true,"font":"monospace"}	f	f	6	full	\N	\N	\N	f	\N	\N	\N
 39	hormones	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
@@ -1422,12 +1534,25 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 108	drugs	strength	\N	input	\N	formatted-value	{"format":true,"conditionalFormatting":[{"operator":"contains","value":"MG","color":"#FFA439","icon":"avg_pace"},{"operator":"contains","value":"mg","color":"#FFA439","icon":"avg_pace"},{"operator":"contains","value":"ml","color":"#3399FF","icon":"water_drop"},{"operator":"contains","value":"ML","color":"#3399FF","icon":"water_drop"},{"operator":"contains","value":"%","color":"#6644FF","icon":"percent"}],"color":null}	f	f	1	half	\N	\N	[{"name":"Is milliliters","rule":{"_and":[{"_or":[{"strength":{"_contains":"ML"}},{"strength":{"_contains":"ml"}}]}]},"options":{"font":"sans-serif","trim":false,"masked":false,"clear":false,"slug":false,"iconLeft":"water_drop"}}]	f	general	\N	\N
 \.
 
+INSERT INTO public.directus_fields
+SELECT *
+FROM directus_fields_temp
+ON CONFLICT DO NOTHING;
+
+DROP TABLE directus_fields_temp;
 
 --
 -- Data for Name: directus_migrations; Type: TABLE DATA; Schema: public; Owner: directus
 --
 
-COPY public.directus_migrations (version, name, "timestamp") FROM stdin;
+CREATE TEMP TABLE directus_migrations_temp
+    ON COMMIT DROP
+AS
+SELECT *
+FROM public.directus_migrations
+    WITH NO DATA;
+
+COPY directus_migrations_temp (version, name, "timestamp") FROM stdin;
 20201028A	Remove Collection Foreign Keys	2023-09-12 16:56:27.501076+00
 20201029A	Remove System Relations	2023-09-12 16:56:27.506998+00
 20201029B	Remove System Collections	2023-09-12 16:56:27.51331+00
@@ -1508,12 +1633,25 @@ COPY public.directus_migrations (version, name, "timestamp") FROM stdin;
 20240515A	Add Session Window	2024-06-13 11:50:48.51778+00
 \.
 
+INSERT INTO public.directus_migrations
+SELECT *
+FROM directus_migrations_temp
+ON CONFLICT DO NOTHING;
+
+DROP TABLE directus_migrations_temp;
 
 --
 -- Data for Name: directus_permissions; Type: TABLE DATA; Schema: public; Owner: directus
 --
 
-COPY public.directus_permissions (id, role, collection, action, permissions, validation, presets, fields) FROM stdin;
+CREATE TEMP TABLE directus_permissions_temp
+    ON COMMIT DROP
+AS
+SELECT *
+FROM public.directus_permissions
+    WITH NO DATA;
+
+COPY directus_permissions_temp (id, role, collection, action, permissions, validation, presets, fields) FROM stdin;
 7	\N	forms	read	{}	{}	\N	*
 12	\N	routes	read	{}	{}	\N	*
 21	\N	dosage_form	read	{}	{}	\N	*
@@ -1539,11 +1677,26 @@ COPY public.directus_permissions (id, role, collection, action, permissions, val
 80	\N	drugs_ingredients	read	{}	{}	\N	*
 \.
 
+INSERT INTO public.directus_permissions
+SELECT *
+FROM directus_permissions_temp
+ON CONFLICT DO NOTHING;
+
+DROP TABLE directus_permissions_temp;
+
 --
 -- Data for Name: directus_relations; Type: TABLE DATA; Schema: public; Owner: directus
 --
 
-COPY public.directus_relations (id, many_collection, many_field, one_collection, one_field, one_collection_field, one_allowed_collections, junction_field, sort_field, one_deselect_action) FROM stdin;
+CREATE TEMP TABLE directus_relations_temp
+    ON COMMIT DROP
+AS
+SELECT *
+FROM public.directus_relations
+    WITH NO DATA;
+
+COPY directus_relations_temp (id, many_collection, many_field, one_collection, one_field, one_collection_field,
+                              one_allowed_collections, junction_field, sort_field, one_deselect_action) FROM stdin;
 3	ingredients	source	source	\N	\N	\N	\N	\N	nullify
 4	ingredients	addiction	addiction	\N	\N	\N	\N	\N	nullify
 5	ingredients	doping	doping	\N	\N	\N	\N	\N	nullify
@@ -1577,17 +1730,53 @@ COPY public.directus_relations (id, many_collection, many_field, one_collection,
 36	drugs	legal_registration_base	legal_registration_base	\N	\N	\N	\N	\N	nullify
 \.
 
+INSERT INTO public.directus_relations
+SELECT *
+FROM directus_relations_temp
+ON CONFLICT DO NOTHING;
+
+DROP TABLE directus_relations_temp;
+
 --
 -- Data for Name: directus_settings; Type: TABLE DATA; Schema: public; Owner: directus
 --
 
-COPY public.directus_settings (id, project_name, project_url, project_color, project_logo, public_foreground, public_background, public_note, auth_login_attempts, auth_password_policy, storage_asset_transform, storage_asset_presets, custom_css, storage_default_folder, basemaps, mapbox_key, module_bar, project_descriptor, default_language, custom_aspect_ratios, public_favicon, default_appearance, default_theme_light, theme_light_overrides, default_theme_dark, theme_dark_overrides, report_error_url, report_bug_url, report_feature_url, public_registration, public_registration_verify_email, public_registration_role, public_registration_email_filter) FROM stdin;
+CREATE TEMP TABLE directus_settings_temp
+    ON COMMIT DROP
+AS
+SELECT *
+FROM public.directus_settings
+    WITH NO DATA;
+
+COPY directus_settings_temp (id, project_name, project_url, project_color, project_logo, public_foreground,
+                               public_background, public_note, auth_login_attempts, auth_password_policy,
+                               storage_asset_transform, storage_asset_presets, custom_css, storage_default_folder,
+                               basemaps, mapbox_key, module_bar, project_descriptor, default_language,
+                               custom_aspect_ratios, public_favicon, default_appearance, default_theme_light,
+                               theme_light_overrides, default_theme_dark, theme_dark_overrides, report_error_url,
+                               report_bug_url, report_feature_url, public_registration,
+                               public_registration_verify_email, public_registration_role,
+                               public_registration_email_filter) FROM stdin;
 1	Czech Drugs Database	directus.settler.tech	#2ECDA7	\N	\N	\N	\N	25	\N	all	\N		\N	\N	\N	[{"type":"module","id":"content","enabled":true},{"type":"module","id":"users","enabled":true},{"type":"module","id":"files","enabled":true},{"type":"module","id":"insights","enabled":true},{"type":"module","id":"settings","enabled":true,"locked":true}]	All Czech Republic drugs available. Data taken from State Institute for Drug Control - Open Data	en-US	\N	\N	dark	Directus Color Match	{}	Directus Default	\N	\N	\N	\N	f	t	\N	\N
 \.
+
+INSERT INTO public.directus_settings
+SELECT *
+FROM directus_settings_temp
+ON CONFLICT DO NOTHING;
+
+DROP TABLE directus_settings_temp;
 
 --
 -- Data for Name: directus_translations; Type: TABLE DATA; Schema: public; Owner: directus
 --
+
+CREATE TEMP TABLE directus_translations_temp
+    ON COMMIT DROP
+AS
+SELECT *
+FROM public.directus_translations
+    WITH NO DATA;
 
 COPY public.directus_translations (id, language, key, value) FROM stdin;
 734766d1-e156-40e6-8daf-1f231a424704	en-US	czech_name	Czech name
@@ -1599,1026 +1788,186 @@ d719018b-774d-4153-8c89-7fe8ab594752	cs-CZ	czech_name	Český název
 ad796ca3-ce1a-4540-9a98-f7e44350a000	en-US	latin_name	Latin name
 \.
 
---
--- Name: composition_id_seq; Type: SEQUENCE SET; Schema: public; Owner: directus
---
+INSERT INTO public.directus_translations
+SELECT *
+FROM directus_translations_temp
+ON CONFLICT DO NOTHING;
 
-SELECT pg_catalog.setval('public.composition_id_seq', 1467928, true);
-
-
---
--- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: directus
---
-
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 1201048, true);
+DROP TABLE directus_translations_temp;
 
 
---
--- Name: directus_fields_id_seq; Type: SEQUENCE SET; Schema: public; Owner: directus
---
 
 SELECT pg_catalog.setval('public.directus_fields_id_seq', 268, true);
-
-
---
--- Name: directus_notifications_id_seq; Type: SEQUENCE SET; Schema: public; Owner: directus
---
-
-SELECT pg_catalog.setval('public.directus_notifications_id_seq', 23, true);
-
-
---
--- Name: directus_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: directus
---
-
-SELECT pg_catalog.setval('public.directus_permissions_id_seq', 235, true);
-
-
---
--- Name: directus_presets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: directus
---
-
-SELECT pg_catalog.setval('public.directus_presets_id_seq', 103, true);
-
-
---
--- Name: directus_relations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: directus
---
-
-SELECT pg_catalog.setval('public.directus_relations_id_seq', 76, true);
-
-
---
--- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: directus
---
-
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 784501, true);
-
-
---
--- Name: directus_settings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: directus
---
-
+SELECT pg_catalog.setval('public.directus_permissions_id_seq', 80, true);
+SELECT pg_catalog.setval('public.directus_relations_id_seq', 36, true);
 SELECT pg_catalog.setval('public.directus_settings_id_seq', 1, true);
 
 
---
--- Name: directus_webhooks_id_seq; Type: SEQUENCE SET; Schema: public; Owner: directus
---
 
-SELECT pg_catalog.setval('public.directus_webhooks_id_seq', 1, false);
+SELECT create_constraint_if_not_exists('public."VPOIS"', '"VPOIS_pkey"', 'PRIMARY KEY (code)');
 
+SELECT create_constraint_if_not_exists('public.addiction', 'addiction_pkey', 'PRIMARY KEY (code)');
 
---
--- Name: drugs_ingredients_id_seq; Type: SEQUENCE SET; Schema: public; Owner: directus
---
+SELECT create_constraint_if_not_exists('public.atc', 'atc_pkey', 'PRIMARY KEY (atc)');
 
-SELECT pg_catalog.setval('public.drugs_ingredients_id_seq', 119073, true);
+SELECT create_constraint_if_not_exists('public.composition', 'composition_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.composition', 'composition_ingredient_foreign', 'FOREIGN KEY (ingredient) REFERENCES public.ingredients (code) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.composition', 'composition_sign_foreign', 'FOREIGN KEY (sign) REFERENCES public.composition_sign (code) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.composition', 'composition_unit_foreign', 'FOREIGN KEY (unit) REFERENCES public.units (unit) ON DELETE SET NULL');
 
+SELECT create_constraint_if_not_exists('public.composition_sign', 'composition_sign_pkey', 'PRIMARY KEY (code)');
 
---
--- Name: VPOIS VPOIS_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
+SELECT create_constraint_if_not_exists('public.country', 'country_pkey', 'PRIMARY KEY (code)');
 
-ALTER TABLE ONLY public."VPOIS"
-    ADD CONSTRAINT "VPOIS_pkey" PRIMARY KEY (code);
+SELECT create_constraint_if_not_exists('public.directus_activity', 'directus_activity_pkey', 'PRIMARY KEY (id)');
 
+SELECT create_constraint_if_not_exists('public.directus_collections', 'directus_collections_pkey', 'PRIMARY KEY (collection)');
+SELECT create_constraint_if_not_exists('public.directus_collections', 'directus_collections_group_foreign', 'FOREIGN KEY ("group") REFERENCES public.directus_collections (collection)');
 
---
--- Name: addiction addiction_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
+SELECT create_constraint_if_not_exists('public.directus_dashboards', 'directus_dashboards_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.directus_dashboards', 'directus_dashboards_user_created_foreign', 'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
 
-ALTER TABLE ONLY public.addiction
-    ADD CONSTRAINT addiction_pkey PRIMARY KEY (code);
+SELECT create_constraint_if_not_exists('public.directus_extensions', 'directus_extensions_pkey', 'PRIMARY KEY (id)');
 
+SELECT create_constraint_if_not_exists('public.directus_fields', 'directus_fields_pkey', 'PRIMARY KEY (id)');
 
---
--- Name: atc atc_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
+SELECT create_constraint_if_not_exists('public.directus_files', 'directus_files_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.directus_files', 'directus_files_folder_foreign', 'FOREIGN KEY (folder) REFERENCES public.directus_folders (id) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.directus_files', 'directus_files_modified_by_foreign', 'FOREIGN KEY (modified_by) REFERENCES public.directus_users (id)');
+SELECT create_constraint_if_not_exists('public.directus_files', 'directus_files_uploaded_by_foreign', 'FOREIGN KEY (uploaded_by) REFERENCES public.directus_users (id)');
 
-ALTER TABLE ONLY public.atc
-    ADD CONSTRAINT atc_pkey PRIMARY KEY (atc);
+SELECT create_constraint_if_not_exists('public.directus_flows', 'directus_flows_operation_unique', 'UNIQUE (operation)');
+SELECT create_constraint_if_not_exists('public.directus_flows', 'directus_flows_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.directus_flows', 'directus_flows_user_created_foreign', 'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
 
+SELECT create_constraint_if_not_exists('public.directus_folders', 'directus_folders_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.directus_folders', 'directus_folders_parent_foreign', 'FOREIGN KEY (parent) REFERENCES public.directus_folders (id)');
 
---
--- Name: composition composition_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
+SELECT create_constraint_if_not_exists('public.directus_migrations', 'directus_migrations_pkey', 'PRIMARY KEY (version)');
 
-ALTER TABLE ONLY public.composition
-    ADD CONSTRAINT composition_pkey PRIMARY KEY (id);
+SELECT create_constraint_if_not_exists('public.directus_notifications', 'directus_notifications_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.directus_notifications', 'directus_notifications_recipient_foreign', 'FOREIGN KEY (recipient) REFERENCES public.directus_users (id) ON DELETE CASCADE');
+SELECT create_constraint_if_not_exists('public.directus_notifications', 'directus_notifications_sender_foreign', 'FOREIGN KEY (sender) REFERENCES public.directus_users (id)');
 
+SELECT create_constraint_if_not_exists('public.directus_operations', 'directus_operations_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.directus_operations', 'directus_operations_reject_unique', 'UNIQUE (reject)');
+SELECT create_constraint_if_not_exists('public.directus_operations', 'directus_operations_resolve_unique', 'UNIQUE (resolve)');
+SELECT create_constraint_if_not_exists('public.directus_operations', 'directus_operations_flow_foreign', 'FOREIGN KEY (flow) REFERENCES public.directus_flows (id) ON DELETE CASCADE');
+SELECT create_constraint_if_not_exists('public.directus_operations', 'directus_operations_reject_foreign', 'FOREIGN KEY (reject) REFERENCES public.directus_operations (id)');
+SELECT create_constraint_if_not_exists('public.directus_operations', 'directus_operations_resolve_foreign', 'FOREIGN KEY (resolve) REFERENCES public.directus_operations (id)');
+SELECT create_constraint_if_not_exists('public.directus_operations', 'directus_operations_user_created_foreign', 'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
 
---
--- Name: composition_sign composition_sign_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
+SELECT create_constraint_if_not_exists('public.directus_panels', 'directus_panels_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.directus_panels', 'directus_panels_dashboard_foreign', 'FOREIGN KEY (dashboard) REFERENCES public.directus_dashboards (id) ON DELETE CASCADE');
+SELECT create_constraint_if_not_exists('public.directus_panels', 'directus_panels_user_created_foreign', 'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
 
-ALTER TABLE ONLY public.composition_sign
-    ADD CONSTRAINT composition_sign_pkey PRIMARY KEY (code);
+SELECT create_constraint_if_not_exists('public.directus_permissions', 'directus_permissions_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.directus_permissions', 'directus_permissions_role_foreign', 'FOREIGN KEY (role) REFERENCES public.directus_roles (id) ON DELETE CASCADE');
 
+SELECT create_constraint_if_not_exists('public.directus_presets', 'directus_presets_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.directus_presets', 'directus_presets_role_foreign', 'FOREIGN KEY (role) REFERENCES public.directus_roles (id) ON DELETE CASCADE');
+SELECT create_constraint_if_not_exists('public.directus_presets', 'directus_presets_user_foreign', 'FOREIGN KEY ("user") REFERENCES public.directus_users (id) ON DELETE CASCADE');
 
---
--- Name: country country_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
+SELECT create_constraint_if_not_exists('public.directus_relations', 'directus_relations_pkey', 'PRIMARY KEY (id)');
 
-ALTER TABLE ONLY public.country
-    ADD CONSTRAINT country_pkey PRIMARY KEY (code);
+SELECT create_constraint_if_not_exists('public.directus_revisions', 'directus_revisions_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.directus_revisions', 'directus_revisions_activity_foreign', 'FOREIGN KEY (activity) REFERENCES public.directus_activity (id) ON DELETE CASCADE');
+SELECT create_constraint_if_not_exists('public.directus_revisions', 'directus_revisions_parent_foreign', 'FOREIGN KEY (parent) REFERENCES public.directus_revisions (id)');
+SELECT create_constraint_if_not_exists('public.directus_revisions', 'directus_revisions_version_foreign', 'FOREIGN KEY (version) REFERENCES public.directus_versions (id) ON DELETE CASCADE');
 
+SELECT create_constraint_if_not_exists('public.directus_roles', 'directus_roles_pkey', 'PRIMARY KEY (id)');
 
---
--- Name: directus_activity directus_activity_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
+SELECT create_constraint_if_not_exists('public.directus_sessions', 'directus_sessions_pkey', 'PRIMARY KEY (token)');
 
-ALTER TABLE ONLY public.directus_activity
-    ADD CONSTRAINT directus_activity_pkey PRIMARY KEY (id);
+SELECT create_constraint_if_not_exists('public.directus_settings', 'directus_settings_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.directus_sessions', 'directus_sessions_share_foreign', 'FOREIGN KEY (share) REFERENCES public.directus_shares (id) ON DELETE CASCADE');
+SELECT create_constraint_if_not_exists('public.directus_sessions', 'directus_sessions_user_foreign', 'FOREIGN KEY ("user") REFERENCES public.directus_users (id) ON DELETE CASCADE');
+SELECT create_constraint_if_not_exists('public.directus_settings', 'directus_settings_project_logo_foreign', 'FOREIGN KEY (project_logo) REFERENCES public.directus_files (id)');
+SELECT create_constraint_if_not_exists('public.directus_settings', 'directus_settings_public_background_foreign', 'FOREIGN KEY (public_background) REFERENCES public.directus_files (id)');
+SELECT create_constraint_if_not_exists('public.directus_settings', 'directus_settings_public_favicon_foreign', 'FOREIGN KEY (public_favicon) REFERENCES public.directus_files (id)');
+SELECT create_constraint_if_not_exists('public.directus_settings', 'directus_settings_public_foreground_foreign', 'FOREIGN KEY (public_foreground) REFERENCES public.directus_files (id)');
+SELECT create_constraint_if_not_exists('public.directus_settings', 'directus_settings_public_registration_role_foreign', 'FOREIGN KEY (public_registration_role) REFERENCES public.directus_roles (id) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.directus_settings', 'directus_settings_storage_default_folder_foreign', 'FOREIGN KEY (storage_default_folder) REFERENCES public.directus_folders (id) ON DELETE SET NULL');
 
+SELECT create_constraint_if_not_exists('public.directus_shares', 'directus_shares_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.directus_shares', 'directus_shares_collection_foreign', 'FOREIGN KEY (collection) REFERENCES public.directus_collections (collection) ON DELETE CASCADE');
+SELECT create_constraint_if_not_exists('public.directus_shares', 'directus_shares_role_foreign', 'FOREIGN KEY (role) REFERENCES public.directus_roles (id) ON DELETE CASCADE');
+SELECT create_constraint_if_not_exists('public.directus_shares', 'directus_shares_user_created_foreign', 'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
 
---
--- Name: directus_collections directus_collections_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
+SELECT create_constraint_if_not_exists('public.directus_translations', 'directus_translations_pkey', 'PRIMARY KEY (id)');
 
-ALTER TABLE ONLY public.directus_collections
-    ADD CONSTRAINT directus_collections_pkey PRIMARY KEY (collection);
+SELECT create_constraint_if_not_exists('public.directus_users', 'directus_users_email_unique', 'UNIQUE (email)');
+SELECT create_constraint_if_not_exists('public.directus_users', 'directus_users_external_identifier_unique', 'UNIQUE (external_identifier)');
+SELECT create_constraint_if_not_exists('public.directus_users', 'directus_users_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.directus_users', 'directus_users_token_unique', 'UNIQUE (token)');
+SELECT create_constraint_if_not_exists('public.directus_users', 'directus_users_role_foreign', 'FOREIGN KEY (role) REFERENCES public.directus_roles (id) ON DELETE SET NULL');
 
+SELECT create_constraint_if_not_exists('public.directus_versions', 'directus_versions_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.directus_versions', 'directus_versions_collection_foreign', 'FOREIGN KEY (collection) REFERENCES public.directus_collections (collection) ON DELETE CASCADE');
+SELECT create_constraint_if_not_exists('public.directus_versions', 'directus_versions_user_created_foreign', 'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.directus_versions', 'directus_versions_user_updated_foreign', 'FOREIGN KEY (user_updated) REFERENCES public.directus_users (id)');
 
---
--- Name: directus_dashboards directus_dashboards_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
+SELECT create_constraint_if_not_exists('public.directus_webhooks', 'directus_webhooks_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.directus_webhooks', 'directus_webhooks_migrated_flow_foreign', 'FOREIGN KEY (migrated_flow) REFERENCES public.directus_flows (id) ON DELETE SET NULL');
 
-ALTER TABLE ONLY public.directus_dashboards
-    ADD CONSTRAINT directus_dashboards_pkey PRIMARY KEY (id);
+SELECT create_constraint_if_not_exists('public.dispense', 'dispense_pkey', 'PRIMARY KEY (code)');
 
+SELECT create_constraint_if_not_exists('public.doping', 'doping_pkey', 'PRIMARY KEY (doping)');
 
---
--- Name: directus_extensions directus_extensions_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
+SELECT create_constraint_if_not_exists('public.dosage_form', 'dosage_form_pkey', 'PRIMARY KEY (form)');
 
-ALTER TABLE ONLY public.directus_extensions
-    ADD CONSTRAINT directus_extensions_pkey PRIMARY KEY (id);
+SELECT create_constraint_if_not_exists('public.drugs_ingredients', 'drugs_ingredients_pkey', 'PRIMARY KEY (id)');
+SELECT create_constraint_if_not_exists('public.drugs_ingredients', 'drugs_ingredients_drugs_code_foreign', 'FOREIGN KEY (drugs_code) REFERENCES public.drugs (code) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.drugs_ingredients', 'drugs_ingredients_ingredients_code_foreign', 'FOREIGN KEY (ingredients_code) REFERENCES public.ingredients (code) ON DELETE SET NULL');
 
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_pkey', 'PRIMARY KEY (code)');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_actual_organization_foreign', 'FOREIGN KEY (actual_organization, actual_organization_country) REFERENCES public.organization (code, country) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_addiction_foreign', 'FOREIGN KEY (addiction) REFERENCES public.addiction (code) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_atc_foreign', 'FOREIGN KEY (atc) REFERENCES public.atc (atc)');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_concurrent_import_organization_foreign', 'FOREIGN KEY (concurrent_import_organization, concurrent_import_country) REFERENCES public.organization (code, country) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_daily_unit_foreign', 'FOREIGN KEY (daily_unit) REFERENCES public.units (unit) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_dispense_foreign', 'FOREIGN KEY (dispense) REFERENCES public.dispense (code) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_doping_foreign', 'FOREIGN KEY (doping) REFERENCES public.doping (doping) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_dosage_foreign', 'FOREIGN KEY (dosage) REFERENCES public.dosage_form (form) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_form_foreign', 'FOREIGN KEY (form) REFERENCES public.forms (form)');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_hormones_foreign', 'FOREIGN KEY (hormones) REFERENCES public.hormones (code) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_legal_registration_base_foreign', 'FOREIGN KEY (legal_registration_base) REFERENCES public.legal_registration_base (code) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_organization_foreign', 'FOREIGN KEY (organization, organization_country) REFERENCES public.organization (code, country) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_pharm_class_foreign', 'FOREIGN KEY (pharm_class) REFERENCES public.pharm_class (code)');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_registration_procedure_foreign', 'FOREIGN KEY (registration_procedure) REFERENCES public.registration_procedure (code) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_registration_status_foreign', 'FOREIGN KEY (registration_status) REFERENCES public.registration_status (code)');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_route_foreign', 'FOREIGN KEY (route) REFERENCES public.routes (route) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.drugs', 'drugs_source_foreign', 'FOREIGN KEY (source) REFERENCES public.source (code)');
 
---
--- Name: directus_fields directus_fields_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
+SELECT create_constraint_if_not_exists('public.forms', 'forms_pkey', 'PRIMARY KEY (form)');
 
-ALTER TABLE ONLY public.directus_fields
-    ADD CONSTRAINT directus_fields_pkey PRIMARY KEY (id);
+SELECT create_constraint_if_not_exists('public.hormones', 'hormones_pkey', 'PRIMARY KEY (code)');
 
+SELECT create_constraint_if_not_exists('public.ingredients', 'ingredients_pkey', 'PRIMARY KEY (code)');
+SELECT create_constraint_if_not_exists('public.ingredients', 'ingredients_addiction_foreign', 'FOREIGN KEY (addiction) REFERENCES public.addiction (code) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.ingredients', 'ingredients_doping_foreign', 'FOREIGN KEY (doping) REFERENCES public.doping (doping) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.ingredients', 'ingredients_hormones_foreign', 'FOREIGN KEY (hormones) REFERENCES public.hormones (code) ON DELETE SET NULL');
+SELECT create_constraint_if_not_exists('public.ingredients', 'ingredients_source_foreign', 'FOREIGN KEY (source) REFERENCES public.source (code)');
 
---
--- Name: directus_files directus_files_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
+SELECT create_constraint_if_not_exists('public.legal_registration_base', 'legal_registration_base_pkey', 'PRIMARY KEY (code)');
 
-ALTER TABLE ONLY public.directus_files
-    ADD CONSTRAINT directus_files_pkey PRIMARY KEY (id);
+SELECT create_constraint_if_not_exists('public.organization', 'organization_pkey', 'PRIMARY KEY (code, country)');
+SELECT create_constraint_if_not_exists('public.organization', 'organization_country_foreign', 'FOREIGN KEY (country) REFERENCES public.country (code)');
 
+SELECT create_constraint_if_not_exists('public.pharm_class', 'pharm_class_pkey', 'PRIMARY KEY (code)');
 
---
--- Name: directus_flows directus_flows_operation_unique; Type: CONSTRAINT; Schema: public; Owner: directus
---
+SELECT create_constraint_if_not_exists('public.registration_procedure', 'registration_procedure_pkey', 'PRIMARY KEY (code)');
 
-ALTER TABLE ONLY public.directus_flows
-    ADD CONSTRAINT directus_flows_operation_unique UNIQUE (operation);
+SELECT create_constraint_if_not_exists('public.registration_status', 'registration_status_pkey', 'PRIMARY KEY (code)');
 
+SELECT create_constraint_if_not_exists('public.routes', 'routes_pkey', 'PRIMARY KEY (route)');
 
---
--- Name: directus_flows directus_flows_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
+SELECT create_constraint_if_not_exists('public.source', 'source_pkey', 'PRIMARY KEY (code)');
 
-ALTER TABLE ONLY public.directus_flows
-    ADD CONSTRAINT directus_flows_pkey PRIMARY KEY (id);
+SELECT create_constraint_if_not_exists('public.substance', 'substance_pkey', 'PRIMARY KEY (code)');
+SELECT create_constraint_if_not_exists('public.substance', 'substance_addiction_foreign', 'FOREIGN KEY (addiction) REFERENCES public.addiction (code) ON DELETE SET NULL');
 
-
---
--- Name: directus_folders directus_folders_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_folders
-    ADD CONSTRAINT directus_folders_pkey PRIMARY KEY (id);
-
-
---
--- Name: directus_migrations directus_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_migrations
-    ADD CONSTRAINT directus_migrations_pkey PRIMARY KEY (version);
-
-
---
--- Name: directus_notifications directus_notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_notifications
-    ADD CONSTRAINT directus_notifications_pkey PRIMARY KEY (id);
-
-
---
--- Name: directus_operations directus_operations_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_operations
-    ADD CONSTRAINT directus_operations_pkey PRIMARY KEY (id);
-
-
---
--- Name: directus_operations directus_operations_reject_unique; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_operations
-    ADD CONSTRAINT directus_operations_reject_unique UNIQUE (reject);
-
-
---
--- Name: directus_operations directus_operations_resolve_unique; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_operations
-    ADD CONSTRAINT directus_operations_resolve_unique UNIQUE (resolve);
-
-
---
--- Name: directus_panels directus_panels_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_panels
-    ADD CONSTRAINT directus_panels_pkey PRIMARY KEY (id);
-
-
---
--- Name: directus_permissions directus_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_permissions
-    ADD CONSTRAINT directus_permissions_pkey PRIMARY KEY (id);
-
-
---
--- Name: directus_presets directus_presets_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_presets
-    ADD CONSTRAINT directus_presets_pkey PRIMARY KEY (id);
-
-
---
--- Name: directus_relations directus_relations_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_relations
-    ADD CONSTRAINT directus_relations_pkey PRIMARY KEY (id);
-
-
---
--- Name: directus_revisions directus_revisions_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_revisions
-    ADD CONSTRAINT directus_revisions_pkey PRIMARY KEY (id);
-
-
---
--- Name: directus_roles directus_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_roles
-    ADD CONSTRAINT directus_roles_pkey PRIMARY KEY (id);
-
-
---
--- Name: directus_sessions directus_sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_sessions
-    ADD CONSTRAINT directus_sessions_pkey PRIMARY KEY (token);
-
-
---
--- Name: directus_settings directus_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_settings
-    ADD CONSTRAINT directus_settings_pkey PRIMARY KEY (id);
-
-
---
--- Name: directus_shares directus_shares_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_shares
-    ADD CONSTRAINT directus_shares_pkey PRIMARY KEY (id);
-
-
---
--- Name: directus_translations directus_translations_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_translations
-    ADD CONSTRAINT directus_translations_pkey PRIMARY KEY (id);
-
-
---
--- Name: directus_users directus_users_email_unique; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_users
-    ADD CONSTRAINT directus_users_email_unique UNIQUE (email);
-
-
---
--- Name: directus_users directus_users_external_identifier_unique; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_users
-    ADD CONSTRAINT directus_users_external_identifier_unique UNIQUE (external_identifier);
-
-
---
--- Name: directus_users directus_users_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_users
-    ADD CONSTRAINT directus_users_pkey PRIMARY KEY (id);
-
-
---
--- Name: directus_users directus_users_token_unique; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_users
-    ADD CONSTRAINT directus_users_token_unique UNIQUE (token);
-
-
---
--- Name: directus_versions directus_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_versions
-    ADD CONSTRAINT directus_versions_pkey PRIMARY KEY (id);
-
-
---
--- Name: directus_webhooks directus_webhooks_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_webhooks
-    ADD CONSTRAINT directus_webhooks_pkey PRIMARY KEY (id);
-
-
---
--- Name: dispense dispense_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.dispense
-    ADD CONSTRAINT dispense_pkey PRIMARY KEY (code);
-
-
---
--- Name: doping doping_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.doping
-    ADD CONSTRAINT doping_pkey PRIMARY KEY (doping);
-
-
---
--- Name: dosage_form dosage_form_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.dosage_form
-    ADD CONSTRAINT dosage_form_pkey PRIMARY KEY (form);
-
-
---
--- Name: drugs_ingredients drugs_ingredients_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs_ingredients
-    ADD CONSTRAINT drugs_ingredients_pkey PRIMARY KEY (id);
-
-
---
--- Name: drugs drugs_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_pkey PRIMARY KEY (code);
-
-
---
--- Name: forms forms_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.forms
-    ADD CONSTRAINT forms_pkey PRIMARY KEY (form);
-
-
---
--- Name: hormones hormones_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.hormones
-    ADD CONSTRAINT hormones_pkey PRIMARY KEY (code);
-
-
---
--- Name: ingredients ingredients_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.ingredients
-    ADD CONSTRAINT ingredients_pkey PRIMARY KEY (code);
-
-
---
--- Name: legal_registration_base legal_registration_base_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.legal_registration_base
-    ADD CONSTRAINT legal_registration_base_pkey PRIMARY KEY (code);
-
-
---
--- Name: organization organization_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.organization
-    ADD CONSTRAINT organization_pkey PRIMARY KEY (code, country);
-
-
---
--- Name: pharm_class pharm_class_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.pharm_class
-    ADD CONSTRAINT pharm_class_pkey PRIMARY KEY (code);
-
-
---
--- Name: registration_procedure registration_procedure_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.registration_procedure
-    ADD CONSTRAINT registration_procedure_pkey PRIMARY KEY (code);
-
-
---
--- Name: registration_status registration_status_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.registration_status
-    ADD CONSTRAINT registration_status_pkey PRIMARY KEY (code);
-
-
---
--- Name: routes routes_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.routes
-    ADD CONSTRAINT routes_pkey PRIMARY KEY (route);
-
-
---
--- Name: source source_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.source
-    ADD CONSTRAINT source_pkey PRIMARY KEY (code);
-
-
---
--- Name: substance substance_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.substance
-    ADD CONSTRAINT substance_pkey PRIMARY KEY (code);
-
-
---
--- Name: units units_pkey; Type: CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.units
-    ADD CONSTRAINT units_pkey PRIMARY KEY (unit);
-
-
---
--- Name: composition composition_ingredient_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.composition
-    ADD CONSTRAINT composition_ingredient_foreign FOREIGN KEY (ingredient) REFERENCES public.ingredients(code) ON DELETE SET NULL;
-
-
---
--- Name: composition composition_sign_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.composition
-    ADD CONSTRAINT composition_sign_foreign FOREIGN KEY (sign) REFERENCES public.composition_sign(code) ON DELETE SET NULL;
-
-
---
--- Name: composition composition_unit_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.composition
-    ADD CONSTRAINT composition_unit_foreign FOREIGN KEY (unit) REFERENCES public.units(unit) ON DELETE SET NULL;
-
-
---
--- Name: directus_collections directus_collections_group_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_collections
-    ADD CONSTRAINT directus_collections_group_foreign FOREIGN KEY ("group") REFERENCES public.directus_collections(collection);
-
-
---
--- Name: directus_dashboards directus_dashboards_user_created_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_dashboards
-    ADD CONSTRAINT directus_dashboards_user_created_foreign FOREIGN KEY (user_created) REFERENCES public.directus_users(id) ON DELETE SET NULL;
-
-
---
--- Name: directus_files directus_files_folder_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_files
-    ADD CONSTRAINT directus_files_folder_foreign FOREIGN KEY (folder) REFERENCES public.directus_folders(id) ON DELETE SET NULL;
-
-
---
--- Name: directus_files directus_files_modified_by_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_files
-    ADD CONSTRAINT directus_files_modified_by_foreign FOREIGN KEY (modified_by) REFERENCES public.directus_users(id);
-
-
---
--- Name: directus_files directus_files_uploaded_by_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_files
-    ADD CONSTRAINT directus_files_uploaded_by_foreign FOREIGN KEY (uploaded_by) REFERENCES public.directus_users(id);
-
-
---
--- Name: directus_flows directus_flows_user_created_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_flows
-    ADD CONSTRAINT directus_flows_user_created_foreign FOREIGN KEY (user_created) REFERENCES public.directus_users(id) ON DELETE SET NULL;
-
-
---
--- Name: directus_folders directus_folders_parent_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_folders
-    ADD CONSTRAINT directus_folders_parent_foreign FOREIGN KEY (parent) REFERENCES public.directus_folders(id);
-
-
---
--- Name: directus_notifications directus_notifications_recipient_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_notifications
-    ADD CONSTRAINT directus_notifications_recipient_foreign FOREIGN KEY (recipient) REFERENCES public.directus_users(id) ON DELETE CASCADE;
-
-
---
--- Name: directus_notifications directus_notifications_sender_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_notifications
-    ADD CONSTRAINT directus_notifications_sender_foreign FOREIGN KEY (sender) REFERENCES public.directus_users(id);
-
-
---
--- Name: directus_operations directus_operations_flow_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_operations
-    ADD CONSTRAINT directus_operations_flow_foreign FOREIGN KEY (flow) REFERENCES public.directus_flows(id) ON DELETE CASCADE;
-
-
---
--- Name: directus_operations directus_operations_reject_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_operations
-    ADD CONSTRAINT directus_operations_reject_foreign FOREIGN KEY (reject) REFERENCES public.directus_operations(id);
-
-
---
--- Name: directus_operations directus_operations_resolve_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_operations
-    ADD CONSTRAINT directus_operations_resolve_foreign FOREIGN KEY (resolve) REFERENCES public.directus_operations(id);
-
-
---
--- Name: directus_operations directus_operations_user_created_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_operations
-    ADD CONSTRAINT directus_operations_user_created_foreign FOREIGN KEY (user_created) REFERENCES public.directus_users(id) ON DELETE SET NULL;
-
-
---
--- Name: directus_panels directus_panels_dashboard_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_panels
-    ADD CONSTRAINT directus_panels_dashboard_foreign FOREIGN KEY (dashboard) REFERENCES public.directus_dashboards(id) ON DELETE CASCADE;
-
-
---
--- Name: directus_panels directus_panels_user_created_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_panels
-    ADD CONSTRAINT directus_panels_user_created_foreign FOREIGN KEY (user_created) REFERENCES public.directus_users(id) ON DELETE SET NULL;
-
-
---
--- Name: directus_permissions directus_permissions_role_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_permissions
-    ADD CONSTRAINT directus_permissions_role_foreign FOREIGN KEY (role) REFERENCES public.directus_roles(id) ON DELETE CASCADE;
-
-
---
--- Name: directus_presets directus_presets_role_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_presets
-    ADD CONSTRAINT directus_presets_role_foreign FOREIGN KEY (role) REFERENCES public.directus_roles(id) ON DELETE CASCADE;
-
-
---
--- Name: directus_presets directus_presets_user_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_presets
-    ADD CONSTRAINT directus_presets_user_foreign FOREIGN KEY ("user") REFERENCES public.directus_users(id) ON DELETE CASCADE;
-
-
---
--- Name: directus_revisions directus_revisions_activity_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_revisions
-    ADD CONSTRAINT directus_revisions_activity_foreign FOREIGN KEY (activity) REFERENCES public.directus_activity(id) ON DELETE CASCADE;
-
-
---
--- Name: directus_revisions directus_revisions_parent_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_revisions
-    ADD CONSTRAINT directus_revisions_parent_foreign FOREIGN KEY (parent) REFERENCES public.directus_revisions(id);
-
-
---
--- Name: directus_revisions directus_revisions_version_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_revisions
-    ADD CONSTRAINT directus_revisions_version_foreign FOREIGN KEY (version) REFERENCES public.directus_versions(id) ON DELETE CASCADE;
-
-
---
--- Name: directus_sessions directus_sessions_share_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_sessions
-    ADD CONSTRAINT directus_sessions_share_foreign FOREIGN KEY (share) REFERENCES public.directus_shares(id) ON DELETE CASCADE;
-
-
---
--- Name: directus_sessions directus_sessions_user_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_sessions
-    ADD CONSTRAINT directus_sessions_user_foreign FOREIGN KEY ("user") REFERENCES public.directus_users(id) ON DELETE CASCADE;
-
-
---
--- Name: directus_settings directus_settings_project_logo_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_settings
-    ADD CONSTRAINT directus_settings_project_logo_foreign FOREIGN KEY (project_logo) REFERENCES public.directus_files(id);
-
-
---
--- Name: directus_settings directus_settings_public_background_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_settings
-    ADD CONSTRAINT directus_settings_public_background_foreign FOREIGN KEY (public_background) REFERENCES public.directus_files(id);
-
-
---
--- Name: directus_settings directus_settings_public_favicon_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_settings
-    ADD CONSTRAINT directus_settings_public_favicon_foreign FOREIGN KEY (public_favicon) REFERENCES public.directus_files(id);
-
-
---
--- Name: directus_settings directus_settings_public_foreground_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_settings
-    ADD CONSTRAINT directus_settings_public_foreground_foreign FOREIGN KEY (public_foreground) REFERENCES public.directus_files(id);
-
-
---
--- Name: directus_settings directus_settings_public_registration_role_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_settings
-    ADD CONSTRAINT directus_settings_public_registration_role_foreign FOREIGN KEY (public_registration_role) REFERENCES public.directus_roles(id) ON DELETE SET NULL;
-
-
---
--- Name: directus_settings directus_settings_storage_default_folder_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_settings
-    ADD CONSTRAINT directus_settings_storage_default_folder_foreign FOREIGN KEY (storage_default_folder) REFERENCES public.directus_folders(id) ON DELETE SET NULL;
-
-
---
--- Name: directus_shares directus_shares_collection_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_shares
-    ADD CONSTRAINT directus_shares_collection_foreign FOREIGN KEY (collection) REFERENCES public.directus_collections(collection) ON DELETE CASCADE;
-
-
---
--- Name: directus_shares directus_shares_role_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_shares
-    ADD CONSTRAINT directus_shares_role_foreign FOREIGN KEY (role) REFERENCES public.directus_roles(id) ON DELETE CASCADE;
-
-
---
--- Name: directus_shares directus_shares_user_created_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_shares
-    ADD CONSTRAINT directus_shares_user_created_foreign FOREIGN KEY (user_created) REFERENCES public.directus_users(id) ON DELETE SET NULL;
-
-
---
--- Name: directus_users directus_users_role_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_users
-    ADD CONSTRAINT directus_users_role_foreign FOREIGN KEY (role) REFERENCES public.directus_roles(id) ON DELETE SET NULL;
-
-
---
--- Name: directus_versions directus_versions_collection_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_versions
-    ADD CONSTRAINT directus_versions_collection_foreign FOREIGN KEY (collection) REFERENCES public.directus_collections(collection) ON DELETE CASCADE;
-
-
---
--- Name: directus_versions directus_versions_user_created_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_versions
-    ADD CONSTRAINT directus_versions_user_created_foreign FOREIGN KEY (user_created) REFERENCES public.directus_users(id) ON DELETE SET NULL;
-
-
---
--- Name: directus_versions directus_versions_user_updated_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_versions
-    ADD CONSTRAINT directus_versions_user_updated_foreign FOREIGN KEY (user_updated) REFERENCES public.directus_users(id);
-
-
---
--- Name: directus_webhooks directus_webhooks_migrated_flow_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.directus_webhooks
-    ADD CONSTRAINT directus_webhooks_migrated_flow_foreign FOREIGN KEY (migrated_flow) REFERENCES public.directus_flows(id) ON DELETE SET NULL;
-
-
---
--- Name: drugs drugs_actual_organization_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_actual_organization_foreign FOREIGN KEY (actual_organization, actual_organization_country) REFERENCES public.organization(code, country) ON DELETE SET NULL;
-
-
---
--- Name: drugs drugs_addiction_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_addiction_foreign FOREIGN KEY (addiction) REFERENCES public.addiction(code) ON DELETE SET NULL;
-
-
---
--- Name: drugs drugs_atc_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_atc_foreign FOREIGN KEY (atc) REFERENCES public.atc(atc);
-
-
---
--- Name: drugs drugs_concurrent_import_organization_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_concurrent_import_organization_foreign FOREIGN KEY (concurrent_import_organization, concurrent_import_country) REFERENCES public.organization(code, country) ON DELETE SET NULL;
-
-
---
--- Name: drugs drugs_daily_unit_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_daily_unit_foreign FOREIGN KEY (daily_unit) REFERENCES public.units(unit) ON DELETE SET NULL;
-
-
---
--- Name: drugs drugs_dispense_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_dispense_foreign FOREIGN KEY (dispense) REFERENCES public.dispense(code) ON DELETE SET NULL;
-
-
---
--- Name: drugs drugs_doping_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_doping_foreign FOREIGN KEY (doping) REFERENCES public.doping(doping) ON DELETE SET NULL;
-
-
---
--- Name: drugs drugs_dosage_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_dosage_foreign FOREIGN KEY (dosage) REFERENCES public.dosage_form(form) ON DELETE SET NULL;
-
-
---
--- Name: drugs drugs_form_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_form_foreign FOREIGN KEY (form) REFERENCES public.forms(form);
-
-
---
--- Name: drugs drugs_hormones_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_hormones_foreign FOREIGN KEY (hormones) REFERENCES public.hormones(code) ON DELETE SET NULL;
-
-
---
--- Name: drugs_ingredients drugs_ingredients_drugs_code_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs_ingredients
-    ADD CONSTRAINT drugs_ingredients_drugs_code_foreign FOREIGN KEY (drugs_code) REFERENCES public.drugs(code) ON DELETE SET NULL;
-
-
---
--- Name: drugs_ingredients drugs_ingredients_ingredients_code_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs_ingredients
-    ADD CONSTRAINT drugs_ingredients_ingredients_code_foreign FOREIGN KEY (ingredients_code) REFERENCES public.ingredients(code) ON DELETE SET NULL;
-
-
---
--- Name: drugs drugs_legal_registration_base_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_legal_registration_base_foreign FOREIGN KEY (legal_registration_base) REFERENCES public.legal_registration_base(code) ON DELETE SET NULL;
-
-
---
--- Name: drugs drugs_organization_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_organization_foreign FOREIGN KEY (organization, organization_country) REFERENCES public.organization(code, country) ON DELETE SET NULL;
-
-
---
--- Name: drugs drugs_pharm_class_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_pharm_class_foreign FOREIGN KEY (pharm_class) REFERENCES public.pharm_class(code);
-
-
---
--- Name: drugs drugs_registration_procedure_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_registration_procedure_foreign FOREIGN KEY (registration_procedure) REFERENCES public.registration_procedure(code) ON DELETE SET NULL;
-
-
---
--- Name: drugs drugs_registration_status_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_registration_status_foreign FOREIGN KEY (registration_status) REFERENCES public.registration_status(code);
-
-
---
--- Name: drugs drugs_route_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_route_foreign FOREIGN KEY (route) REFERENCES public.routes(route) ON DELETE SET NULL;
-
-
---
--- Name: drugs drugs_source_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.drugs
-    ADD CONSTRAINT drugs_source_foreign FOREIGN KEY (source) REFERENCES public.source(code);
-
-
---
--- Name: ingredients ingredients_addiction_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.ingredients
-    ADD CONSTRAINT ingredients_addiction_foreign FOREIGN KEY (addiction) REFERENCES public.addiction(code) ON DELETE SET NULL;
-
-
---
--- Name: ingredients ingredients_doping_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.ingredients
-    ADD CONSTRAINT ingredients_doping_foreign FOREIGN KEY (doping) REFERENCES public.doping(doping) ON DELETE SET NULL;
-
-
---
--- Name: ingredients ingredients_hormones_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.ingredients
-    ADD CONSTRAINT ingredients_hormones_foreign FOREIGN KEY (hormones) REFERENCES public.hormones(code) ON DELETE SET NULL;
-
-
---
--- Name: ingredients ingredients_source_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.ingredients
-    ADD CONSTRAINT ingredients_source_foreign FOREIGN KEY (source) REFERENCES public.source(code);
-
-
---
--- Name: organization organization_country_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.organization
-    ADD CONSTRAINT organization_country_foreign FOREIGN KEY (country) REFERENCES public.country(code);
-
-
---
--- Name: substance substance_addiction_foreign; Type: FK CONSTRAINT; Schema: public; Owner: directus
---
-
-ALTER TABLE ONLY public.substance
-    ADD CONSTRAINT substance_addiction_foreign FOREIGN KEY (addiction) REFERENCES public.addiction(code) ON DELETE SET NULL;
-
+SELECT create_constraint_if_not_exists('public.units', 'units_pkey', 'PRIMARY KEY (unit)');
 
 --
 -- PostgreSQL database dump complete
