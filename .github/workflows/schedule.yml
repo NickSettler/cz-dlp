@@ -36,7 +36,7 @@ jobs:
             continue-on-error: true
             run: |
               npm run run:check
-              echo "::set-output name=new_data::$($?)"
+              echo "new_data=$?" >> $GITHUB_OUTPUT
 
           - name: Echo new data
             run: |
