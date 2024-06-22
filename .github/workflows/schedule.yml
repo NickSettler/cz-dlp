@@ -61,4 +61,4 @@ jobs:
       - check_for_new_data
     if: needs.check_for_new_data.outputs.new_data == 1
     secrets: inherit
-    uses: ./github/workflows/release.yml
+    uses: ./.github/workflows/release.yml
