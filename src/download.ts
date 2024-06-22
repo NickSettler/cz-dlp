@@ -18,6 +18,7 @@ export const getDLPLink = async (): Promise<string> =>
         ...(process.env.DOCKER_BUILD === 'true' && {
           executablePath: '/usr/bin/chromium',
         }),
+        dumpio: true,
       })
       .then(async (browser) => {
         const url = new URL(process.env.DATA_URL);
