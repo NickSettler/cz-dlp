@@ -6,6 +6,8 @@ on:
 
   workflow_dispatch:
 
+env:
+  DATA_URL: ${{ secrets.DATA_URL }}
 
 jobs:
     check_for_new_data:
