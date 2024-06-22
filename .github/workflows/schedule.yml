@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       new_data: ${{ steps.check_for_new_data.outputs.new_data }}
+      version: ${{ steps.get_latest_version.outputs.version }}
     steps:
       - uses: actions/checkout@v3
 
@@ -62,3 +63,5 @@ jobs:
     if: needs.check_for_new_data.outputs.new_data == 1
     secrets: inherit
     uses: ./.github/workflows/release.yml
+    with:
+      release_tag: ${{ needs.check_for_new_data.outputs.version }}
