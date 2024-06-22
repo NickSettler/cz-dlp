@@ -42,7 +42,7 @@ jobs:
             if: failure() || success()
             id: set_result
             run: |
-              if [ ${{ steps.check_for_new_data.outputs.exitcode }} -eq 0 ]; then
+              if [ "${{ steps.check_for_new_data.outputs.exitcode }}" -eq 0 ]; then
                 echo "result=success" >> $GITHUB_OUTPUT
               else
                 echo "result=failure" >> $GITHUB_OUTPUT
