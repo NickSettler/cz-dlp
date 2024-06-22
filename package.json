@@ -1,6 +1,7 @@
 {
   "name": "dlp-processor",
   "module": "src/index.ts",
+  "version": "1.0.0",
   "type": "module",
   "devDependencies": {
     "@eslint/js": "^9.5.0",
