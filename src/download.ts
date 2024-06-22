@@ -10,7 +10,9 @@ export const getDLPLink = async (): Promise<string> =>
         headless: true,
         timeout: 1000 * 60 * 5,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        // executablePath: '/usr/bin/chromium',
+        ...(process.env.DOCKER_BUILD === 'true' && {
+          executablePath: '/usr/bin/chromium',
+        }),
       })
       .then(async (browser) => {
         const url = new URL(process.env.DATA_URL);
