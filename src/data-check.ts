@@ -23,6 +23,9 @@ const checkNewData = async () => {
   const currentVersion = await getLatestDatasetVersion();
   const tags = await getGithubRepoTags();
 
+  console.log(`Existing tags: ${tags.join(', ')}`);
+  console.log(`Current version: ${currentVersion}`);
+
   if (!tags.includes(currentVersion)) {
     console.log('Data already exists');
     process.exit(0);
