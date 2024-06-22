@@ -13,7 +13,7 @@ jobs:
     check_for_new_data:
         name: Check for new data
         outputs:
-          new_data: ${{ steps.check_for_new_data.outputs.new_data }}
+          new-data: ${{ steps.check-for-new-data.outputs.new_data }}
         runs-on: ubuntu-latest
         steps:
           - uses: actions/checkout@v3
@@ -32,20 +32,24 @@ jobs:
             run: bun install
 
           - name: Check for new data
-            id: check_for_new_data
+            id: check-for-new-data
             continue-on-error: true
             run: |
               npm run run:check
-              echo "new_data=$?" >> $GITHUB_ENV
+              echo "::set-output name=new_data::$($?)"
+
+          - name: Echo new data
+            run: |
+              echo "New data: ${{ steps.check-for-new-data.outputs.new_data }}"
 
           - name: Get latest version
-            if: steps.check_for_new_data.outputs.new_data == 1
+            if: steps.check-for-new-data.outputs.new_data == 1
             id: get_latest_version
             run: |
               echo "version=$(bun run run:get-version)" >> $GITHUB_OUTPUT
 
           - name: Create release
-            if: steps.check_for_new_data.outputs.new_data == 1
+            if: steps.check-for-new-data.outputs.new_data == 1
             uses: softprops/action-gh-release@v2
             with:
               tag_name: ${{ steps.get_latest_version.outputs.version }}
