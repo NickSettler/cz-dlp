@@ -1,56 +1,27 @@
-import puppeteer from 'puppeteer';
 import { createWriteStream, existsSync, mkdirSync } from 'node:fs';
 import { Readable } from 'node:stream';
 import decompress from 'decompress';
+import { parse } from 'node-html-parser';
 
-export const getDLPLink = async (): Promise<string> =>
-  new Promise((resolve) => {
-    puppeteer
-      .launch({
-        headless: true,
-        timeout: 0,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--font-render-hinting=medium',
-          '--disable-gpu',
-          '--no-first-run',
-          '--no-sandbox',
-          '--no-zygote',
-          '--deterministic-fetch',
-          '--disable-features=IsolateOrigins',
-          '--disable-site-isolation-trials',
-        ],
-        ...(process.env.DOCKER_BUILD === 'true' && {
-          executablePath: '/usr/bin/chromium',
-        }),
-        dumpio: true,
-      })
-      .then(async (browser) => {
-        const url = new URL(process.env.DATA_URL);
-        const page = await browser.newPage();
-        await page.goto(url.toString());
+export const getDLPLink = async (): Promise<string> => {
+  const url = new URL(process.env.DATA_URL);
 
-        const links = await page.$$('a');
+  const html = await fetch(url.toString()).then(async (res) => res.text());
 
-        const hrefs = await Promise.all(
-          links.map(async (link) => page.evaluate((el) => el.href, link)),
-        );
+  const root = parse(html);
 
-        const DLPLink = hrefs.find(
-          (href) => href.includes('DLP') && href.endsWith('.zip'),
-        );
+  const hrefs = root.querySelectorAll('a').map((a) => a.getAttribute('href'));
 
-        if (!DLPLink) {
-          throw new Error('DLP link not found');
-        }
+  const DLPLink = hrefs.find(
+    (href) => href?.includes('DLP') && href?.endsWith('.zip'),
+  );
 
-        resolve(DLPLink);
+  if (!DLPLink) {
+    throw new Error('DLP link not found');
+  }
 
-        await browser.close();
-      });
-  });
+  return DLPLink;
+};
 
 export const getLatestDatasetVersion = async () => {
   const DLPLink = await getDLPLink();

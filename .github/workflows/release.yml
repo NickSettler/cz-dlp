@@ -19,7 +19,7 @@ env:
 jobs:
   database_build:
     name: Build medicines database
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
