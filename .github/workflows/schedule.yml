@@ -36,11 +36,13 @@ jobs:
               set -e
               bun run run:check
               echo "exitcode=$?" >> $GITHUB_OUTPUT
+              exit 0
 
     create_new_release:
       name: Create new release
       runs-on: ubuntu-latest
       needs: check_for_new_data
+      #if: needs.check_for_new_data.outputs.exitcode == 1
       steps:
         - uses: actions/checkout@v3
 
