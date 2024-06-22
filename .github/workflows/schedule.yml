@@ -36,20 +36,16 @@ jobs:
             continue-on-error: true
             run: |
               npm run run:check
-              if [ $? -eq 0 ]; then
-                echo "new_data=false" >> $GITHUB_OUTPUT
-              else
-                echo "new_data=true" >> $GITHUB_OUTPUT
-              fi
+              echo "new_data=$?" >> $GITHUB_ENV
 
           - name: Get latest version
-            if: ${{ steps.check_for_new_data.outputs.new_data == 'true' }}
+            if: steps.check_for_new_data.outputs.new_data == 1
             id: get_latest_version
             run: |
               echo "version=$(bun run run:get-version)" >> $GITHUB_OUTPUT
 
           - name: Create release
-            if: ${{ steps.check_for_new_data.outputs.new_data == 'true' }}
+            if: steps.check_for_new_data.outputs.new_data == 1
             uses: softprops/action-gh-release@v2
             with:
               tag_name: ${{ steps.get_latest_version.outputs.version }}
