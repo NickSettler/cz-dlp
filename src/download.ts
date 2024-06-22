@@ -8,6 +8,7 @@ export const getLatestData = async (sourcesPath: string) =>
     puppeteer
       .launch({
         headless: true,
+        timeout: 0,
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
         executablePath: '/usr/bin/chromium',
       })
