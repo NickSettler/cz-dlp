@@ -35,7 +35,7 @@ jobs:
             run: |
               set -e
               bun run run:check
-              echo "exit code: $?" >> $GITHUB_OUTPUT
+              echo "exitcode=$?" >> $GITHUB_OUTPUT
 
     create_new_release:
       name: Create new release
