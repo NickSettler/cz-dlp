@@ -43,13 +43,13 @@ jobs:
               fi
 
           - name: Get latest version
-            if: steps.check_for_new_data.outputs.new_data == 'true'
+            if: ${{ steps.check_for_new_data.outputs.new_data == 'true' }}
             id: get_latest_version
             run: |
               echo "version=$(bun run run:get-version)" >> $GITHUB_OUTPUT
 
           - name: Create release
-            if: steps.check_for_new_data.outputs.new_data == 'true'
+            if: ${{ steps.check_for_new_data.outputs.new_data == 'true' }}
             uses: softprops/action-gh-release@v2
             with:
               tag_name: ${{ steps.get_latest_version.outputs.version }}
