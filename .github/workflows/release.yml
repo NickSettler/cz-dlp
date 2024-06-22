@@ -39,15 +39,14 @@ jobs:
           if [ "${{ github.event_name }}" == "release" ]; then
             echo "RELEASE_TAG=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
           else
-            echo "RELEASE_TAG=${{ github.event.inputs.release_tag }}" >> $GITHUB_OUTPUT
+            echo "RELEASE_TAG=${{ inputs.release_tag }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Print release tag
         run: |
           echo "RELEASE_TAG=${{ steps.set_release_tag.outputs.RELEASE_TAG }}"
 
-      - name: Build and push (from release)
-        if: github.event_name == 'release'
+      - name: Build and push
         uses: docker/build-push-action@v6.1.0
         with:
           platforms: linux/amd64,linux/arm64
