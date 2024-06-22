@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    // Enable latest features
+    "lib": ["ESNext", "DOM"],
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "allowJs": true,
+
+    // Output
+    "outDir": "dist",
+    "rootDir": "src",
+
+    "declaration": true,
+
+    // Best practices
+    "skipLibCheck": true,
+    "noFallthroughCasesInSwitch": true,
+
+    "esModuleInterop": true
+  },
+  "include": [
+    "src"
+  ]
+}
