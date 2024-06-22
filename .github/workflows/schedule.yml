@@ -35,6 +35,7 @@ jobs:
               set -e
               npm run run:check
               echo "exitcode=$?" >> $GITHUB_OUTPUT
+              exit 0
 
           - name: Get latest version
             if: steps.check_for_new_data.outputs.exitcode == 1
