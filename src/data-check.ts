@@ -26,7 +26,7 @@ const checkNewData = async () => {
   console.log(`Existing tags: ${tags.join(', ')}`);
   console.log(`Current version: ${currentVersion}`);
 
-  if (!tags.includes(currentVersion)) {
+  if (tags.includes(currentVersion)) {
     console.log('Data already exists');
     process.exit(0);
   }
