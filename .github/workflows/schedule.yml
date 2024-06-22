@@ -12,6 +12,8 @@ env:
 jobs:
     check_for_new_data:
         name: Check for new data
+        outputs:
+          new_data: ${{ steps.check_for_new_data.outputs.new_data }}
         runs-on: ubuntu-latest
         steps:
           - uses: actions/checkout@v3
