@@ -1340,9 +1340,7 @@ ALTER TABLE ONLY public.drugs_ingredients
 -- Data for Name: directus_collections; Type: TABLE DATA; Schema: public; Owner: directus
 --
 
-CREATE TEMP TABLE directus_collections_temp
-    ON COMMIT DROP
-AS
+CREATE TEMP TABLE directus_collections_temp AS
 SELECT *
 FROM public.directus_collections
     WITH NO DATA;
@@ -1394,9 +1392,7 @@ DROP TABLE directus_collections_temp;
 -- Data for Name: directus_fields; Type: TABLE DATA; Schema: public; Owner: directus
 --
 
-CREATE TEMP TABLE directus_fields_temp
-    ON COMMIT DROP
-AS
+CREATE TEMP TABLE directus_fields_temp AS
 SELECT *
 FROM public.directus_fields
     WITH NO DATA;
@@ -1545,9 +1541,7 @@ DROP TABLE directus_fields_temp;
 -- Data for Name: directus_migrations; Type: TABLE DATA; Schema: public; Owner: directus
 --
 
-CREATE TEMP TABLE directus_migrations_temp
-    ON COMMIT DROP
-AS
+CREATE TEMP TABLE directus_migrations_temp AS
 SELECT *
 FROM public.directus_migrations
     WITH NO DATA;
@@ -1644,9 +1638,7 @@ DROP TABLE directus_migrations_temp;
 -- Data for Name: directus_permissions; Type: TABLE DATA; Schema: public; Owner: directus
 --
 
-CREATE TEMP TABLE directus_permissions_temp
-    ON COMMIT DROP
-AS
+CREATE TEMP TABLE directus_permissions_temp AS
 SELECT *
 FROM public.directus_permissions
     WITH NO DATA;
@@ -1688,9 +1680,7 @@ DROP TABLE directus_permissions_temp;
 -- Data for Name: directus_relations; Type: TABLE DATA; Schema: public; Owner: directus
 --
 
-CREATE TEMP TABLE directus_relations_temp
-    ON COMMIT DROP
-AS
+CREATE TEMP TABLE directus_relations_temp AS
 SELECT *
 FROM public.directus_relations
     WITH NO DATA;
@@ -1741,22 +1731,20 @@ DROP TABLE directus_relations_temp;
 -- Data for Name: directus_settings; Type: TABLE DATA; Schema: public; Owner: directus
 --
 
-CREATE TEMP TABLE directus_settings_temp
-    ON COMMIT DROP
-AS
+CREATE TEMP TABLE directus_settings_temp AS
 SELECT *
 FROM public.directus_settings
     WITH NO DATA;
 
 COPY directus_settings_temp (id, project_name, project_url, project_color, project_logo, public_foreground,
-                               public_background, public_note, auth_login_attempts, auth_password_policy,
-                               storage_asset_transform, storage_asset_presets, custom_css, storage_default_folder,
-                               basemaps, mapbox_key, module_bar, project_descriptor, default_language,
-                               custom_aspect_ratios, public_favicon, default_appearance, default_theme_light,
-                               theme_light_overrides, default_theme_dark, theme_dark_overrides, report_error_url,
-                               report_bug_url, report_feature_url, public_registration,
-                               public_registration_verify_email, public_registration_role,
-                               public_registration_email_filter) FROM stdin;
+                             public_background, public_note, auth_login_attempts, auth_password_policy,
+                             storage_asset_transform, storage_asset_presets, custom_css, storage_default_folder,
+                             basemaps, mapbox_key, module_bar, project_descriptor, default_language,
+                             custom_aspect_ratios, public_favicon, default_appearance, default_theme_light,
+                             theme_light_overrides, default_theme_dark, theme_dark_overrides, report_error_url,
+                             report_bug_url, report_feature_url, public_registration,
+                             public_registration_verify_email, public_registration_role,
+                             public_registration_email_filter) FROM stdin;
 1	Czech Drugs Database	directus.settler.tech	#2ECDA7	\N	\N	\N	\N	25	\N	all	\N		\N	\N	\N	[{"type":"module","id":"content","enabled":true},{"type":"module","id":"users","enabled":true},{"type":"module","id":"files","enabled":true},{"type":"module","id":"insights","enabled":true},{"type":"module","id":"settings","enabled":true,"locked":true}]	All Czech Republic drugs available. Data taken from State Institute for Drug Control - Open Data	en-US	\N	\N	dark	Directus Color Match	{}	Directus Default	\N	\N	\N	\N	f	t	\N	\N
 \.
 
@@ -1771,14 +1759,12 @@ DROP TABLE directus_settings_temp;
 -- Data for Name: directus_translations; Type: TABLE DATA; Schema: public; Owner: directus
 --
 
-CREATE TEMP TABLE directus_translations_temp
-    ON COMMIT DROP
-AS
+CREATE TEMP TABLE directus_translations_temp AS
 SELECT *
 FROM public.directus_translations
     WITH NO DATA;
 
-COPY public.directus_translations (id, language, key, value) FROM stdin;
+COPY directus_translations_temp (id, language, key, value) FROM stdin;
 734766d1-e156-40e6-8daf-1f231a424704	en-US	czech_name	Czech name
 59bf94ad-f6de-4445-8311-56e684b3ebe5	en-US	english_name	English name
 45d18db1-a937-41b9-853b-4c36a00f076c	en-US	edqm_code	EDQM code
@@ -1804,16 +1790,19 @@ SELECT pg_catalog.setval('public.directus_settings_id_seq', 1, true);
 
 
 
-SELECT public.create_constraint_if_not_exists('public."VPOIS"', '"VPOIS_pkey"', 'PRIMARY KEY (code)');
+SELECT public.create_constraint_if_not_exists('public."VPOIS"', 'VPOIS_pkey', 'PRIMARY KEY (code)');
 
 SELECT public.create_constraint_if_not_exists('public.addiction', 'addiction_pkey', 'PRIMARY KEY (code)');
 
 SELECT public.create_constraint_if_not_exists('public.atc', 'atc_pkey', 'PRIMARY KEY (atc)');
 
 SELECT public.create_constraint_if_not_exists('public.composition', 'composition_pkey', 'PRIMARY KEY (id)');
-SELECT public.create_constraint_if_not_exists('public.composition', 'composition_ingredient_foreign', 'FOREIGN KEY (ingredient) REFERENCES public.ingredients (code) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.composition', 'composition_sign_foreign', 'FOREIGN KEY (sign) REFERENCES public.composition_sign (code) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.composition', 'composition_unit_foreign', 'FOREIGN KEY (unit) REFERENCES public.units (unit) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.composition', 'composition_ingredient_foreign',
+                                              'FOREIGN KEY (ingredient) REFERENCES public.ingredients (code) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.composition', 'composition_sign_foreign',
+                                              'FOREIGN KEY (sign) REFERENCES public.composition_sign (code) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.composition', 'composition_unit_foreign',
+                                              'FOREIGN KEY (unit) REFERENCES public.units (unit) ON DELETE SET NULL');
 
 SELECT public.create_constraint_if_not_exists('public.composition_sign', 'composition_sign_pkey', 'PRIMARY KEY (code)');
 
@@ -1821,94 +1810,149 @@ SELECT public.create_constraint_if_not_exists('public.country', 'country_pkey', 
 
 SELECT public.create_constraint_if_not_exists('public.directus_activity', 'directus_activity_pkey', 'PRIMARY KEY (id)');
 
-SELECT public.create_constraint_if_not_exists('public.directus_collections', 'directus_collections_pkey', 'PRIMARY KEY (collection)');
-SELECT public.create_constraint_if_not_exists('public.directus_collections', 'directus_collections_group_foreign', 'FOREIGN KEY ("group") REFERENCES public.directus_collections (collection)');
+SELECT public.create_constraint_if_not_exists('public.directus_collections', 'directus_collections_pkey',
+                                              'PRIMARY KEY (collection)');
+SELECT public.create_constraint_if_not_exists('public.directus_collections', 'directus_collections_group_foreign',
+                                              'FOREIGN KEY ("group") REFERENCES public.directus_collections (collection)');
 
-SELECT public.create_constraint_if_not_exists('public.directus_dashboards', 'directus_dashboards_pkey', 'PRIMARY KEY (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_dashboards', 'directus_dashboards_user_created_foreign', 'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.directus_dashboards', 'directus_dashboards_pkey',
+                                              'PRIMARY KEY (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_dashboards', 'directus_dashboards_user_created_foreign',
+                                              'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
 
-SELECT public.create_constraint_if_not_exists('public.directus_extensions', 'directus_extensions_pkey', 'PRIMARY KEY (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_extensions', 'directus_extensions_pkey',
+                                              'PRIMARY KEY (id)');
 
 SELECT public.create_constraint_if_not_exists('public.directus_fields', 'directus_fields_pkey', 'PRIMARY KEY (id)');
 
 SELECT public.create_constraint_if_not_exists('public.directus_files', 'directus_files_pkey', 'PRIMARY KEY (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_files', 'directus_files_folder_foreign', 'FOREIGN KEY (folder) REFERENCES public.directus_folders (id) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.directus_files', 'directus_files_modified_by_foreign', 'FOREIGN KEY (modified_by) REFERENCES public.directus_users (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_files', 'directus_files_uploaded_by_foreign', 'FOREIGN KEY (uploaded_by) REFERENCES public.directus_users (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_files', 'directus_files_folder_foreign',
+                                              'FOREIGN KEY (folder) REFERENCES public.directus_folders (id) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.directus_files', 'directus_files_modified_by_foreign',
+                                              'FOREIGN KEY (modified_by) REFERENCES public.directus_users (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_files', 'directus_files_uploaded_by_foreign',
+                                              'FOREIGN KEY (uploaded_by) REFERENCES public.directus_users (id)');
 
-SELECT public.create_constraint_if_not_exists('public.directus_flows', 'directus_flows_operation_unique', 'UNIQUE (operation)');
+SELECT public.create_constraint_if_not_exists('public.directus_flows', 'directus_flows_operation_unique',
+                                              'UNIQUE (operation)');
 SELECT public.create_constraint_if_not_exists('public.directus_flows', 'directus_flows_pkey', 'PRIMARY KEY (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_flows', 'directus_flows_user_created_foreign', 'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.directus_flows', 'directus_flows_user_created_foreign',
+                                              'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
 
 SELECT public.create_constraint_if_not_exists('public.directus_folders', 'directus_folders_pkey', 'PRIMARY KEY (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_folders', 'directus_folders_parent_foreign', 'FOREIGN KEY (parent) REFERENCES public.directus_folders (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_folders', 'directus_folders_parent_foreign',
+                                              'FOREIGN KEY (parent) REFERENCES public.directus_folders (id)');
 
-SELECT public.create_constraint_if_not_exists('public.directus_migrations', 'directus_migrations_pkey', 'PRIMARY KEY (version)');
+SELECT public.create_constraint_if_not_exists('public.directus_migrations', 'directus_migrations_pkey',
+                                              'PRIMARY KEY (version)');
 
-SELECT public.create_constraint_if_not_exists('public.directus_notifications', 'directus_notifications_pkey', 'PRIMARY KEY (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_notifications', 'directus_notifications_recipient_foreign', 'FOREIGN KEY (recipient) REFERENCES public.directus_users (id) ON DELETE CASCADE');
-SELECT public.create_constraint_if_not_exists('public.directus_notifications', 'directus_notifications_sender_foreign', 'FOREIGN KEY (sender) REFERENCES public.directus_users (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_notifications', 'directus_notifications_pkey',
+                                              'PRIMARY KEY (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_notifications',
+                                              'directus_notifications_recipient_foreign',
+                                              'FOREIGN KEY (recipient) REFERENCES public.directus_users (id) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_notifications', 'directus_notifications_sender_foreign',
+                                              'FOREIGN KEY (sender) REFERENCES public.directus_users (id)');
 
-SELECT public.create_constraint_if_not_exists('public.directus_operations', 'directus_operations_pkey', 'PRIMARY KEY (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_operations', 'directus_operations_reject_unique', 'UNIQUE (reject)');
-SELECT public.create_constraint_if_not_exists('public.directus_operations', 'directus_operations_resolve_unique', 'UNIQUE (resolve)');
-SELECT public.create_constraint_if_not_exists('public.directus_operations', 'directus_operations_flow_foreign', 'FOREIGN KEY (flow) REFERENCES public.directus_flows (id) ON DELETE CASCADE');
-SELECT public.create_constraint_if_not_exists('public.directus_operations', 'directus_operations_reject_foreign', 'FOREIGN KEY (reject) REFERENCES public.directus_operations (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_operations', 'directus_operations_resolve_foreign', 'FOREIGN KEY (resolve) REFERENCES public.directus_operations (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_operations', 'directus_operations_user_created_foreign', 'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.directus_operations', 'directus_operations_pkey',
+                                              'PRIMARY KEY (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_operations', 'directus_operations_reject_unique',
+                                              'UNIQUE (reject)');
+SELECT public.create_constraint_if_not_exists('public.directus_operations', 'directus_operations_resolve_unique',
+                                              'UNIQUE (resolve)');
+SELECT public.create_constraint_if_not_exists('public.directus_operations', 'directus_operations_flow_foreign',
+                                              'FOREIGN KEY (flow) REFERENCES public.directus_flows (id) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_operations', 'directus_operations_reject_foreign',
+                                              'FOREIGN KEY (reject) REFERENCES public.directus_operations (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_operations', 'directus_operations_resolve_foreign',
+                                              'FOREIGN KEY (resolve) REFERENCES public.directus_operations (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_operations', 'directus_operations_user_created_foreign',
+                                              'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
 
 SELECT public.create_constraint_if_not_exists('public.directus_panels', 'directus_panels_pkey', 'PRIMARY KEY (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_panels', 'directus_panels_dashboard_foreign', 'FOREIGN KEY (dashboard) REFERENCES public.directus_dashboards (id) ON DELETE CASCADE');
-SELECT public.create_constraint_if_not_exists('public.directus_panels', 'directus_panels_user_created_foreign', 'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.directus_panels', 'directus_panels_dashboard_foreign',
+                                              'FOREIGN KEY (dashboard) REFERENCES public.directus_dashboards (id) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_panels', 'directus_panels_user_created_foreign',
+                                              'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
 
-SELECT public.create_constraint_if_not_exists('public.directus_permissions', 'directus_permissions_pkey', 'PRIMARY KEY (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_permissions', 'directus_permissions_role_foreign', 'FOREIGN KEY (role) REFERENCES public.directus_roles (id) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_permissions', 'directus_permissions_pkey',
+                                              'PRIMARY KEY (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_permissions', 'directus_permissions_role_foreign',
+                                              'FOREIGN KEY (role) REFERENCES public.directus_roles (id) ON DELETE CASCADE');
 
 SELECT public.create_constraint_if_not_exists('public.directus_presets', 'directus_presets_pkey', 'PRIMARY KEY (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_presets', 'directus_presets_role_foreign', 'FOREIGN KEY (role) REFERENCES public.directus_roles (id) ON DELETE CASCADE');
-SELECT public.create_constraint_if_not_exists('public.directus_presets', 'directus_presets_user_foreign', 'FOREIGN KEY ("user") REFERENCES public.directus_users (id) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_presets', 'directus_presets_role_foreign',
+                                              'FOREIGN KEY (role) REFERENCES public.directus_roles (id) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_presets', 'directus_presets_user_foreign',
+                                              'FOREIGN KEY ("user") REFERENCES public.directus_users (id) ON DELETE CASCADE');
 
-SELECT public.create_constraint_if_not_exists('public.directus_relations', 'directus_relations_pkey', 'PRIMARY KEY (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_relations', 'directus_relations_pkey',
+                                              'PRIMARY KEY (id)');
 
-SELECT public.create_constraint_if_not_exists('public.directus_revisions', 'directus_revisions_pkey', 'PRIMARY KEY (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_revisions', 'directus_revisions_activity_foreign', 'FOREIGN KEY (activity) REFERENCES public.directus_activity (id) ON DELETE CASCADE');
-SELECT public.create_constraint_if_not_exists('public.directus_revisions', 'directus_revisions_parent_foreign', 'FOREIGN KEY (parent) REFERENCES public.directus_revisions (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_revisions', 'directus_revisions_version_foreign', 'FOREIGN KEY (version) REFERENCES public.directus_versions (id) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_revisions', 'directus_revisions_pkey',
+                                              'PRIMARY KEY (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_revisions', 'directus_revisions_activity_foreign',
+                                              'FOREIGN KEY (activity) REFERENCES public.directus_activity (id) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_revisions', 'directus_revisions_parent_foreign',
+                                              'FOREIGN KEY (parent) REFERENCES public.directus_revisions (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_revisions', 'directus_revisions_version_foreign',
+                                              'FOREIGN KEY (version) REFERENCES public.directus_versions (id) ON DELETE CASCADE');
 
 SELECT public.create_constraint_if_not_exists('public.directus_roles', 'directus_roles_pkey', 'PRIMARY KEY (id)');
 
-SELECT public.create_constraint_if_not_exists('public.directus_sessions', 'directus_sessions_pkey', 'PRIMARY KEY (token)');
+SELECT public.create_constraint_if_not_exists('public.directus_sessions', 'directus_sessions_pkey',
+                                              'PRIMARY KEY (token)');
 
 SELECT public.create_constraint_if_not_exists('public.directus_settings', 'directus_settings_pkey', 'PRIMARY KEY (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_sessions', 'directus_sessions_share_foreign', 'FOREIGN KEY (share) REFERENCES public.directus_shares (id) ON DELETE CASCADE');
-SELECT public.create_constraint_if_not_exists('public.directus_sessions', 'directus_sessions_user_foreign', 'FOREIGN KEY ("user") REFERENCES public.directus_users (id) ON DELETE CASCADE');
-SELECT public.create_constraint_if_not_exists('public.directus_settings', 'directus_settings_project_logo_foreign', 'FOREIGN KEY (project_logo) REFERENCES public.directus_files (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_settings', 'directus_settings_public_background_foreign', 'FOREIGN KEY (public_background) REFERENCES public.directus_files (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_settings', 'directus_settings_public_favicon_foreign', 'FOREIGN KEY (public_favicon) REFERENCES public.directus_files (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_settings', 'directus_settings_public_foreground_foreign', 'FOREIGN KEY (public_foreground) REFERENCES public.directus_files (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_settings', 'directus_settings_public_registration_role_foreign', 'FOREIGN KEY (public_registration_role) REFERENCES public.directus_roles (id) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.directus_settings', 'directus_settings_storage_default_folder_foreign', 'FOREIGN KEY (storage_default_folder) REFERENCES public.directus_folders (id) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.directus_sessions', 'directus_sessions_share_foreign',
+                                              'FOREIGN KEY (share) REFERENCES public.directus_shares (id) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_sessions', 'directus_sessions_user_foreign',
+                                              'FOREIGN KEY ("user") REFERENCES public.directus_users (id) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_settings', 'directus_settings_project_logo_foreign',
+                                              'FOREIGN KEY (project_logo) REFERENCES public.directus_files (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_settings', 'directus_settings_public_background_foreign',
+                                              'FOREIGN KEY (public_background) REFERENCES public.directus_files (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_settings', 'directus_settings_public_favicon_foreign',
+                                              'FOREIGN KEY (public_favicon) REFERENCES public.directus_files (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_settings', 'directus_settings_public_foreground_foreign',
+                                              'FOREIGN KEY (public_foreground) REFERENCES public.directus_files (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_settings',
+                                              'directus_settings_public_registration_role_foreign',
+                                              'FOREIGN KEY (public_registration_role) REFERENCES public.directus_roles (id) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.directus_settings',
+                                              'directus_settings_storage_default_folder_foreign',
+                                              'FOREIGN KEY (storage_default_folder) REFERENCES public.directus_folders (id) ON DELETE SET NULL');
 
 SELECT public.create_constraint_if_not_exists('public.directus_shares', 'directus_shares_pkey', 'PRIMARY KEY (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_shares', 'directus_shares_collection_foreign', 'FOREIGN KEY (collection) REFERENCES public.directus_collections (collection) ON DELETE CASCADE');
-SELECT public.create_constraint_if_not_exists('public.directus_shares', 'directus_shares_role_foreign', 'FOREIGN KEY (role) REFERENCES public.directus_roles (id) ON DELETE CASCADE');
-SELECT public.create_constraint_if_not_exists('public.directus_shares', 'directus_shares_user_created_foreign', 'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.directus_shares', 'directus_shares_collection_foreign',
+                                              'FOREIGN KEY (collection) REFERENCES public.directus_collections (collection) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_shares', 'directus_shares_role_foreign',
+                                              'FOREIGN KEY (role) REFERENCES public.directus_roles (id) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_shares', 'directus_shares_user_created_foreign',
+                                              'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
 
-SELECT public.create_constraint_if_not_exists('public.directus_translations', 'directus_translations_pkey', 'PRIMARY KEY (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_translations', 'directus_translations_pkey',
+                                              'PRIMARY KEY (id)');
 
 SELECT public.create_constraint_if_not_exists('public.directus_users', 'directus_users_email_unique', 'UNIQUE (email)');
-SELECT public.create_constraint_if_not_exists('public.directus_users', 'directus_users_external_identifier_unique', 'UNIQUE (external_identifier)');
+SELECT public.create_constraint_if_not_exists('public.directus_users', 'directus_users_external_identifier_unique',
+                                              'UNIQUE (external_identifier)');
 SELECT public.create_constraint_if_not_exists('public.directus_users', 'directus_users_pkey', 'PRIMARY KEY (id)');
 SELECT public.create_constraint_if_not_exists('public.directus_users', 'directus_users_token_unique', 'UNIQUE (token)');
-SELECT public.create_constraint_if_not_exists('public.directus_users', 'directus_users_role_foreign', 'FOREIGN KEY (role) REFERENCES public.directus_roles (id) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.directus_users', 'directus_users_role_foreign',
+                                              'FOREIGN KEY (role) REFERENCES public.directus_roles (id) ON DELETE SET NULL');
 
 SELECT public.create_constraint_if_not_exists('public.directus_versions', 'directus_versions_pkey', 'PRIMARY KEY (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_versions', 'directus_versions_collection_foreign', 'FOREIGN KEY (collection) REFERENCES public.directus_collections (collection) ON DELETE CASCADE');
-SELECT public.create_constraint_if_not_exists('public.directus_versions', 'directus_versions_user_created_foreign', 'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.directus_versions', 'directus_versions_user_updated_foreign', 'FOREIGN KEY (user_updated) REFERENCES public.directus_users (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_versions', 'directus_versions_collection_foreign',
+                                              'FOREIGN KEY (collection) REFERENCES public.directus_collections (collection) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_versions', 'directus_versions_user_created_foreign',
+                                              'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.directus_versions', 'directus_versions_user_updated_foreign',
+                                              'FOREIGN KEY (user_updated) REFERENCES public.directus_users (id)');
 
 SELECT public.create_constraint_if_not_exists('public.directus_webhooks', 'directus_webhooks_pkey', 'PRIMARY KEY (id)');
-SELECT public.create_constraint_if_not_exists('public.directus_webhooks', 'directus_webhooks_migrated_flow_foreign', 'FOREIGN KEY (migrated_flow) REFERENCES public.directus_flows (id) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.directus_webhooks', 'directus_webhooks_migrated_flow_foreign',
+                                              'FOREIGN KEY (migrated_flow) REFERENCES public.directus_flows (id) ON DELETE SET NULL');
 
 SELECT public.create_constraint_if_not_exists('public.dispense', 'dispense_pkey', 'PRIMARY KEY (code)');
 
@@ -1917,55 +1961,84 @@ SELECT public.create_constraint_if_not_exists('public.doping', 'doping_pkey', 'P
 SELECT public.create_constraint_if_not_exists('public.dosage_form', 'dosage_form_pkey', 'PRIMARY KEY (form)');
 
 SELECT public.create_constraint_if_not_exists('public.drugs_ingredients', 'drugs_ingredients_pkey', 'PRIMARY KEY (id)');
-SELECT public.create_constraint_if_not_exists('public.drugs_ingredients', 'drugs_ingredients_drugs_code_foreign', 'FOREIGN KEY (drugs_code) REFERENCES public.drugs (code) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.drugs_ingredients', 'drugs_ingredients_ingredients_code_foreign', 'FOREIGN KEY (ingredients_code) REFERENCES public.ingredients (code) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.drugs_ingredients', 'drugs_ingredients_drugs_code_foreign',
+                                              'FOREIGN KEY (drugs_code) REFERENCES public.drugs (code) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.drugs_ingredients', 'drugs_ingredients_ingredients_code_foreign',
+                                              'FOREIGN KEY (ingredients_code) REFERENCES public.ingredients (code) ON DELETE SET NULL');
 
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_pkey', 'PRIMARY KEY (code)');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_actual_organization_foreign', 'FOREIGN KEY (actual_organization, actual_organization_country) REFERENCES public.organization (code, country) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_addiction_foreign', 'FOREIGN KEY (addiction) REFERENCES public.addiction (code) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_atc_foreign', 'FOREIGN KEY (atc) REFERENCES public.atc (atc)');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_concurrent_import_organization_foreign', 'FOREIGN KEY (concurrent_import_organization, concurrent_import_country) REFERENCES public.organization (code, country) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_daily_unit_foreign', 'FOREIGN KEY (daily_unit) REFERENCES public.units (unit) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_dispense_foreign', 'FOREIGN KEY (dispense) REFERENCES public.dispense (code) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_doping_foreign', 'FOREIGN KEY (doping) REFERENCES public.doping (doping) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_dosage_foreign', 'FOREIGN KEY (dosage) REFERENCES public.dosage_form (form) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_form_foreign', 'FOREIGN KEY (form) REFERENCES public.forms (form)');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_hormones_foreign', 'FOREIGN KEY (hormones) REFERENCES public.hormones (code) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_legal_registration_base_foreign', 'FOREIGN KEY (legal_registration_base) REFERENCES public.legal_registration_base (code) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_organization_foreign', 'FOREIGN KEY (organization, organization_country) REFERENCES public.organization (code, country) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_pharm_class_foreign', 'FOREIGN KEY (pharm_class) REFERENCES public.pharm_class (code)');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_registration_procedure_foreign', 'FOREIGN KEY (registration_procedure) REFERENCES public.registration_procedure (code) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_registration_status_foreign', 'FOREIGN KEY (registration_status) REFERENCES public.registration_status (code)');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_route_foreign', 'FOREIGN KEY (route) REFERENCES public.routes (route) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_source_foreign', 'FOREIGN KEY (source) REFERENCES public.source (code)');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_actual_organization_foreign',
+                                              'FOREIGN KEY (actual_organization, actual_organization_country) REFERENCES public.organization (code, country) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_addiction_foreign',
+                                              'FOREIGN KEY (addiction) REFERENCES public.addiction (code) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_atc_foreign',
+                                              'FOREIGN KEY (atc) REFERENCES public.atc (atc)');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_concurrent_import_organization_foreign',
+                                              'FOREIGN KEY (concurrent_import_organization, concurrent_import_country) REFERENCES public.organization (code, country) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_daily_unit_foreign',
+                                              'FOREIGN KEY (daily_unit) REFERENCES public.units (unit) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_dispense_foreign',
+                                              'FOREIGN KEY (dispense) REFERENCES public.dispense (code) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_doping_foreign',
+                                              'FOREIGN KEY (doping) REFERENCES public.doping (doping) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_dosage_foreign',
+                                              'FOREIGN KEY (dosage) REFERENCES public.dosage_form (form) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_form_foreign',
+                                              'FOREIGN KEY (form) REFERENCES public.forms (form)');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_hormones_foreign',
+                                              'FOREIGN KEY (hormones) REFERENCES public.hormones (code) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_legal_registration_base_foreign',
+                                              'FOREIGN KEY (legal_registration_base) REFERENCES public.legal_registration_base (code) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_organization_foreign',
+                                              'FOREIGN KEY (organization, organization_country) REFERENCES public.organization (code, country) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_pharm_class_foreign',
+                                              'FOREIGN KEY (pharm_class) REFERENCES public.pharm_class (code)');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_registration_procedure_foreign',
+                                              'FOREIGN KEY (registration_procedure) REFERENCES public.registration_procedure (code) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_registration_status_foreign',
+                                              'FOREIGN KEY (registration_status) REFERENCES public.registration_status (code)');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_route_foreign',
+                                              'FOREIGN KEY (route) REFERENCES public.routes (route) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_source_foreign',
+                                              'FOREIGN KEY (source) REFERENCES public.source (code)');
 
 SELECT public.create_constraint_if_not_exists('public.forms', 'forms_pkey', 'PRIMARY KEY (form)');
 
 SELECT public.create_constraint_if_not_exists('public.hormones', 'hormones_pkey', 'PRIMARY KEY (code)');
 
 SELECT public.create_constraint_if_not_exists('public.ingredients', 'ingredients_pkey', 'PRIMARY KEY (code)');
-SELECT public.create_constraint_if_not_exists('public.ingredients', 'ingredients_addiction_foreign', 'FOREIGN KEY (addiction) REFERENCES public.addiction (code) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.ingredients', 'ingredients_doping_foreign', 'FOREIGN KEY (doping) REFERENCES public.doping (doping) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.ingredients', 'ingredients_hormones_foreign', 'FOREIGN KEY (hormones) REFERENCES public.hormones (code) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.ingredients', 'ingredients_source_foreign', 'FOREIGN KEY (source) REFERENCES public.source (code)');
+SELECT public.create_constraint_if_not_exists('public.ingredients', 'ingredients_addiction_foreign',
+                                              'FOREIGN KEY (addiction) REFERENCES public.addiction (code) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.ingredients', 'ingredients_doping_foreign',
+                                              'FOREIGN KEY (doping) REFERENCES public.doping (doping) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.ingredients', 'ingredients_hormones_foreign',
+                                              'FOREIGN KEY (hormones) REFERENCES public.hormones (code) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.ingredients', 'ingredients_source_foreign',
+                                              'FOREIGN KEY (source) REFERENCES public.source (code)');
 
-SELECT public.create_constraint_if_not_exists('public.legal_registration_base', 'legal_registration_base_pkey', 'PRIMARY KEY (code)');
+SELECT public.create_constraint_if_not_exists('public.legal_registration_base', 'legal_registration_base_pkey',
+                                              'PRIMARY KEY (code)');
 
-SELECT public.create_constraint_if_not_exists('public.organization', 'organization_pkey', 'PRIMARY KEY (code, country)');
-SELECT public.create_constraint_if_not_exists('public.organization', 'organization_country_foreign', 'FOREIGN KEY (country) REFERENCES public.country (code)');
+SELECT public.create_constraint_if_not_exists('public.organization', 'organization_pkey',
+                                              'PRIMARY KEY (code, country)');
+SELECT public.create_constraint_if_not_exists('public.organization', 'organization_country_foreign',
+                                              'FOREIGN KEY (country) REFERENCES public.country (code)');
 
 SELECT public.create_constraint_if_not_exists('public.pharm_class', 'pharm_class_pkey', 'PRIMARY KEY (code)');
 
-SELECT public.create_constraint_if_not_exists('public.registration_procedure', 'registration_procedure_pkey', 'PRIMARY KEY (code)');
+SELECT public.create_constraint_if_not_exists('public.registration_procedure', 'registration_procedure_pkey',
+                                              'PRIMARY KEY (code)');
 
-SELECT public.create_constraint_if_not_exists('public.registration_status', 'registration_status_pkey', 'PRIMARY KEY (code)');
+SELECT public.create_constraint_if_not_exists('public.registration_status', 'registration_status_pkey',
+                                              'PRIMARY KEY (code)');
 
 SELECT public.create_constraint_if_not_exists('public.routes', 'routes_pkey', 'PRIMARY KEY (route)');
 
 SELECT public.create_constraint_if_not_exists('public.source', 'source_pkey', 'PRIMARY KEY (code)');
 
 SELECT public.create_constraint_if_not_exists('public.substance', 'substance_pkey', 'PRIMARY KEY (code)');
-SELECT public.create_constraint_if_not_exists('public.substance', 'substance_addiction_foreign', 'FOREIGN KEY (addiction) REFERENCES public.addiction (code) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.substance', 'substance_addiction_foreign',
+                                              'FOREIGN KEY (addiction) REFERENCES public.addiction (code) ON DELETE SET NULL');
 
 SELECT public.create_constraint_if_not_exists('public.units', 'units_pkey', 'PRIMARY KEY (unit)');
 
