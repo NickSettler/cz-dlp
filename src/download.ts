@@ -12,8 +12,15 @@ export const getDLPLink = async (): Promise<string> =>
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
           '--font-render-hinting=medium',
           '--disable-gpu',
+          '--no-first-run',
+          '--no-sandbox',
+          '--no-zygote',
+          '--deterministic-fetch',
+          '--disable-features=IsolateOrigins',
+          '--disable-site-isolation-trials',
         ],
         ...(process.env.DOCKER_BUILD === 'true' && {
           executablePath: '/usr/bin/chromium',
