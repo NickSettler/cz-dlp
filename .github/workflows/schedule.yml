@@ -1,4 +1,5 @@
 name: Check for new data
+run-name: Check for new data
 
 on:
   schedule:
@@ -8,6 +9,7 @@ on:
 
 env:
   DATA_URL: ${{ secrets.DATA_URL }}
+
 
 jobs:
   check_for_new_data:
