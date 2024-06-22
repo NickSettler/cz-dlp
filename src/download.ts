@@ -9,7 +9,12 @@ export const getDLPLink = async (): Promise<string> =>
       .launch({
         headless: true,
         timeout: 1000 * 60 * 5,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--font-render-hinting=medium',
+          '--disable-gpu',
+        ],
         ...(process.env.DOCKER_BUILD === 'true' && {
           executablePath: '/usr/bin/chromium',
         }),
