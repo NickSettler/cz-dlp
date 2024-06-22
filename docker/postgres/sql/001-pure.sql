@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 15.6 (Debian 15.6-1.pgdg120+2)
--- Dumped by pg_dump version 15.6 (Debian 15.6-1.pgdg120+2)
+-- Dumped from database version 16.3
+-- Dumped by pg_dump version 16.3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -59,7 +59,7 @@ CREATE TABLE public.atc (
 );
 
 
-ALTER TABLE public.atc OWNER TO dlp;
+ALTER TABLE public.atc OWNER TO directus;
 
 --
 -- Name: composition; Type: TABLE; Schema: public; Owner: directus
@@ -92,7 +92,7 @@ CREATE SEQUENCE public.composition_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.composition_id_seq OWNER TO directus;
+ALTER SEQUENCE public.composition_id_seq OWNER TO directus;
 
 --
 -- Name: composition_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: directus
@@ -160,7 +160,7 @@ CREATE SEQUENCE public.directus_activity_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.directus_activity_id_seq OWNER TO directus;
+ALTER SEQUENCE public.directus_activity_id_seq OWNER TO directus;
 
 --
 -- Name: directus_activity_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: directus
@@ -273,7 +273,7 @@ CREATE SEQUENCE public.directus_fields_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.directus_fields_id_seq OWNER TO directus;
+ALTER SEQUENCE public.directus_fields_id_seq OWNER TO directus;
 
 --
 -- Name: directus_fields_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: directus
@@ -395,7 +395,7 @@ CREATE SEQUENCE public.directus_notifications_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.directus_notifications_id_seq OWNER TO directus;
+ALTER SEQUENCE public.directus_notifications_id_seq OWNER TO directus;
 
 --
 -- Name: directus_notifications_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: directus
@@ -482,7 +482,7 @@ CREATE SEQUENCE public.directus_permissions_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.directus_permissions_id_seq OWNER TO directus;
+ALTER SEQUENCE public.directus_permissions_id_seq OWNER TO directus;
 
 --
 -- Name: directus_permissions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: directus
@@ -527,7 +527,7 @@ CREATE SEQUENCE public.directus_presets_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.directus_presets_id_seq OWNER TO directus;
+ALTER SEQUENCE public.directus_presets_id_seq OWNER TO directus;
 
 --
 -- Name: directus_presets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: directus
@@ -569,7 +569,7 @@ CREATE SEQUENCE public.directus_relations_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.directus_relations_id_seq OWNER TO directus;
+ALTER SEQUENCE public.directus_relations_id_seq OWNER TO directus;
 
 --
 -- Name: directus_relations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: directus
@@ -609,7 +609,7 @@ CREATE SEQUENCE public.directus_revisions_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.directus_revisions_id_seq OWNER TO directus;
+ALTER SEQUENCE public.directus_revisions_id_seq OWNER TO directus;
 
 --
 -- Name: directus_revisions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: directus
@@ -710,7 +710,7 @@ CREATE SEQUENCE public.directus_settings_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.directus_settings_id_seq OWNER TO directus;
+ALTER SEQUENCE public.directus_settings_id_seq OWNER TO directus;
 
 --
 -- Name: directus_settings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: directus
@@ -785,8 +785,7 @@ CREATE TABLE public.directus_users (
     theme_dark character varying(255),
     theme_light character varying(255),
     theme_light_overrides json,
-    theme_dark_overrides json,
-    household integer
+    theme_dark_overrides json
 );
 
 
@@ -846,7 +845,7 @@ CREATE SEQUENCE public.directus_webhooks_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.directus_webhooks_id_seq OWNER TO directus;
+ALTER SEQUENCE public.directus_webhooks_id_seq OWNER TO directus;
 
 --
 -- Name: directus_webhooks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: directus
@@ -970,7 +969,7 @@ CREATE SEQUENCE public.drugs_ingredients_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.drugs_ingredients_id_seq OWNER TO directus;
+ALTER SEQUENCE public.drugs_ingredients_id_seq OWNER TO directus;
 
 --
 -- Name: drugs_ingredients_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: directus
@@ -1220,11 +1219,42 @@ ALTER TABLE ONLY public.drugs_ingredients ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
+-- Data for Name: VPOIS; Type: TABLE DATA; Schema: public; Owner: directus
+--
+
+COPY public."VPOIS" (code, name, web, email, phone) FROM stdin;
+\.
+
+
+--
+-- Data for Name: addiction; Type: TABLE DATA; Schema: public; Owner: directus
+--
+
+COPY public.addiction (code, name) FROM stdin;
+\.
+
+
+--
+-- Data for Name: atc; Type: TABLE DATA; Schema: public; Owner: directus
+--
+
+COPY public.atc (atc, nt, name, name_en) FROM stdin;
+\.
+
+
+--
+-- Data for Name: composition; Type: TABLE DATA; Schema: public; Owner: directus
+--
+
+COPY public.composition (id, code, ingredient, "order", sign, amount_from, amount, unit) FROM stdin;
+\.
+
+
+--
 -- Data for Name: directus_collections; Type: TABLE DATA; Schema: public; Owner: directus
 --
 
 COPY public.directus_collections (collection, icon, note, display_template, hidden, singleton, translations, archive_field, archive_app_filter, archive_value, unarchive_value, sort_field, accountability, color, item_duplication_fields, sort, "group", collapse, preview_url, versioning) FROM stdin;
-drugs_ingredients	import_export	\N	\N	t	f	\N	\N	t	\N	\N	\N	all	\N	\N	2	Drugs	open	\N	f
 Sources	folder	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#2ECDA7	\N	6	\N	open	\N	f
 source	barcode	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#2ECDA7	\N	1	Sources	open	\N	f
 organization	account_balance	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#2ECDA7	\N	2	Sources	open	\N	f
@@ -1237,12 +1267,10 @@ ingredients	format_list_bulleted	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#FFA439	\N	3	Com
 substance	pie_chart	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#FFA439	\N	4	Composition	open	\N	f
 units	percent	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#FFA439	\N	5	Composition	open	\N	f
 dispense	back_hand	Dispense information	{{code}} - {{name}}	f	f	[{"language":"en-US","translation":"Dispense","singular":"Dispense type","plural":"Dispense types"},{"language":"cs-CZ","translation":"Výdej","singular":"Způsob výdeje","plural":"Způsoby výdeje"},{"language":"ru-RU","translation":"Выдача","singular":"Способ выдачи","plural":"Способы выдачи"}]	\N	t	\N	\N	\N	all	#3399FF	\N	2	general	open	\N	f
-Drugs	star	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#6644FF	\N	4	\N	open	\N	f
 dosage_form	thermostat_carbon	Dosage form	{{form}} - {{name}}	f	f	\N	\N	t	\N	\N	\N	all	#3399FF	\N	3	general	open	\N	f
 forms	medication_liquid	Medical form	{{form}} - {{name}} ({{name_lat}})	f	f	[{"language":"en-US","translation":"Forms","singular":"Form","plural":"Forms"}]	\N	t	\N	\N	\N	all	#3399FF	\N	4	general	open	\N	f
 pharm_class	123	Pharmacologic Class	{{code}} - {{name}}	f	f	\N	\N	t	\N	\N	\N	all	#3399FF	\N	5	general	open	\N	f
 routes	conversion_path	Medicine application route	\N	f	f	\N	\N	t	\N	\N	\N	all	#3399FF	\N	6	general	open	\N	f
-drugs	pill	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	\N	\N	1	Drugs	open	\N	f
 Effects	folder	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#E35169	\N	3	\N	open	\N	f
 addiction	potted_plant	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#E35169	\N	1	Effects	open	\N	f
 doping	add	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#E35169	\N	2	Effects	open	\N	f
@@ -1253,22 +1281,9 @@ legal_registration_base	document_scanner	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#A2B5CD	
 registration_status	incomplete_circle	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#A2B5CD	\N	3	Registration	open	\N	f
 registration_procedure	function	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#A2B5CD	\N	4	Registration	open	\N	f
 atc	full_stacked_bar_chart	Anatomical Therapeutic Chemical code	{{atc}} / {{name}} ({{name_en}})	f	f	[{"language":"en-US","translation":"Anatomical Therapeutic Chemical codes","singular":"Anatomical Therapeutic Chemical code","plural":"Anatomical Therapeutic Chemical codes"},{"language":"cs-CZ","translation":"Anatomicko-terapeuticko-chemická skupiny","singular":"Anatomicko-terapeuticko-chemická skupina","plural":"Anatomicko-terapeuticko-chemická skupiny"},{"language":"ru-RU","translation":"Анатомо-терапевтическо-химическая классификация","singular":"Анатомо-терапевтическо-химический код","plural":"Анатомо-терапевтическо-химический коды"}]	\N	t	\N	\N	\N	all	#3399FF	\N	1	general	open	\N	f
-\.
-
-
---
--- Data for Name: directus_dashboards; Type: TABLE DATA; Schema: public; Owner: directus
---
-
-COPY public.directus_dashboards (id, name, icon, note, date_created, user_created, color) FROM stdin;
-\.
-
-
---
--- Data for Name: directus_extensions; Type: TABLE DATA; Schema: public; Owner: directus
---
-
-COPY public.directus_extensions (enabled, id, folder, source, bundle) FROM stdin;
+Drugs	star	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#6644FF	\N	4	\N	open	\N	f
+drugs	pill	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#6644FF	\N	1	Drugs	open	\N	f
+drugs_ingredients	import_export	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#6644FF	\N	2	Drugs	open	\N	f
 \.
 
 
@@ -1388,7 +1403,6 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 105	drugs	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	half	\N	\N	\N	t	\N	{"_and":[{"code":{"_regex":"\\\\d{7}"}}]}	\N
 106	drugs	notification_sign	\N	input	\N	\N	\N	f	f	2	half	\N	\N	\N	f	\N	{"_and":[{"notification_sign":{"_contains":"H"}}]}	\N
 125	drugs	concurrent_import	\N	input	\N	formatted-value	\N	f	f	5	full	\N	Usually in the form PI/xxx/yyyy	\N	f	sources	\N	\N
-253	directus_users	household	\N	select-dropdown-m2o	\N	\N	\N	f	f	1	full	\N	\N	\N	f	\N	\N	\N
 21	routes	route	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
 258	routes	name_en	\N	input	\N	formatted-value	\N	f	f	3	full	\N	\N	\N	t	\N	\N	\N
 259	routes	name_lat	\N	input	\N	formatted-value	\N	f	f	4	full	\N	\N	\N	t	\N	\N	\N
@@ -1406,30 +1420,6 @@ COPY public.directus_fields (id, collection, field, special, interface, options,
 261	forms	name_lat	\N	input	\N	formatted-value	\N	f	f	4	full	\N	$t:latin_name	\N	f	\N	\N	\N
 262	forms	is_cannabis	cast-boolean	boolean	\N	boolean	{"iconOff":"smoke_free","iconOn":"smoking_rooms","colorOff":"#2ECDA7","colorOn":"#FFA439"}	f	f	5	half	[{"language":"cs-CZ","translation":"Je konopi"}]	The form is used when prescribing medical cannabis	\N	t	\N	\N	\N
 108	drugs	strength	\N	input	\N	formatted-value	{"format":true,"conditionalFormatting":[{"operator":"contains","value":"MG","color":"#FFA439","icon":"avg_pace"},{"operator":"contains","value":"mg","color":"#FFA439","icon":"avg_pace"},{"operator":"contains","value":"ml","color":"#3399FF","icon":"water_drop"},{"operator":"contains","value":"ML","color":"#3399FF","icon":"water_drop"},{"operator":"contains","value":"%","color":"#6644FF","icon":"percent"}],"color":null}	f	f	1	half	\N	\N	[{"name":"Is milliliters","rule":{"_and":[{"_or":[{"strength":{"_contains":"ML"}},{"strength":{"_contains":"ml"}}]}]},"options":{"font":"sans-serif","trim":false,"masked":false,"clear":false,"slug":false,"iconLeft":"water_drop"}}]	f	general	\N	\N
-\.
-
-
---
--- Data for Name: directus_files; Type: TABLE DATA; Schema: public; Owner: directus
---
-
-COPY public.directus_files (id, storage, filename_disk, filename_download, title, type, folder, uploaded_by, uploaded_on, modified_by, modified_on, charset, filesize, width, height, duration, embed, description, location, tags, metadata, focal_point_x, focal_point_y) FROM stdin;
-\.
-
-
---
--- Data for Name: directus_flows; Type: TABLE DATA; Schema: public; Owner: directus
---
-
-COPY public.directus_flows (id, name, icon, color, description, status, trigger, accountability, options, operation, date_created, user_created) FROM stdin;
-\.
-
-
---
--- Data for Name: directus_folders; Type: TABLE DATA; Schema: public; Owner: directus
---
-
-COPY public.directus_folders (id, name, parent) FROM stdin;
 \.
 
 
@@ -1520,30 +1510,6 @@ COPY public.directus_migrations (version, name, "timestamp") FROM stdin;
 
 
 --
--- Data for Name: directus_notifications; Type: TABLE DATA; Schema: public; Owner: directus
---
-
-COPY public.directus_notifications (id, "timestamp", status, recipient, sender, subject, message, collection, item) FROM stdin;
-\.
-
-
---
--- Data for Name: directus_operations; Type: TABLE DATA; Schema: public; Owner: directus
---
-
-COPY public.directus_operations (id, name, key, type, position_x, position_y, options, resolve, reject, flow, date_created, user_created) FROM stdin;
-\.
-
-
---
--- Data for Name: directus_panels; Type: TABLE DATA; Schema: public; Owner: directus
---
-
-COPY public.directus_panels (id, dashboard, name, icon, color, show_header, note, type, position_x, position_y, width, height, options, date_created, user_created) FROM stdin;
-\.
-
-
---
 -- Data for Name: directus_permissions; Type: TABLE DATA; Schema: public; Owner: directus
 --
 
@@ -1572,7 +1538,6 @@ COPY public.directus_permissions (id, role, collection, action, permissions, val
 79	\N	drugs	read	{}	{}	\N	*
 80	\N	drugs_ingredients	read	{}	{}	\N	*
 \.
-
 
 --
 -- Data for Name: directus_relations; Type: TABLE DATA; Schema: public; Owner: directus
@@ -1612,24 +1577,13 @@ COPY public.directus_relations (id, many_collection, many_field, one_collection,
 36	drugs	legal_registration_base	legal_registration_base	\N	\N	\N	\N	\N	nullify
 \.
 
-
---
--- Data for Name: directus_roles; Type: TABLE DATA; Schema: public; Owner: directus
---
-
-COPY public.directus_roles (id, name, icon, description, ip_access, enforce_tfa, admin_access, app_access) FROM stdin;
-68e30277-d231-498d-bb37-9ca24e60a38c	Administrator	verified	$t:admin_description	\N	f	t	t
-\.
-
-
 --
 -- Data for Name: directus_settings; Type: TABLE DATA; Schema: public; Owner: directus
 --
 
 COPY public.directus_settings (id, project_name, project_url, project_color, project_logo, public_foreground, public_background, public_note, auth_login_attempts, auth_password_policy, storage_asset_transform, storage_asset_presets, custom_css, storage_default_folder, basemaps, mapbox_key, module_bar, project_descriptor, default_language, custom_aspect_ratios, public_favicon, default_appearance, default_theme_light, theme_light_overrides, default_theme_dark, theme_dark_overrides, report_error_url, report_bug_url, report_feature_url, public_registration, public_registration_verify_email, public_registration_role, public_registration_email_filter) FROM stdin;
-1	Czech Drugs Database	directus.settler.tech	#6644ff	\N	\N	\N	\N	25	\N	all	\N		\N	\N	\N	[{"type":"module","id":"content","enabled":true},{"type":"module","id":"users","enabled":true},{"type":"module","id":"files","enabled":true},{"type":"module","id":"insights","enabled":true},{"type":"module","id":"settings","enabled":true,"locked":true}]	All Czech Republic drugs available. Data taken from State Institute for Drug Control - Open Data	en-US	\N	\N	dark	Directus Color Match	{}	Directus Default	\N	\N	\N	\N	f	t	\N	\N
+1	Czech Drugs Database	directus.settler.tech	#2ECDA7	\N	\N	\N	\N	25	\N	all	\N		\N	\N	\N	[{"type":"module","id":"content","enabled":true},{"type":"module","id":"users","enabled":true},{"type":"module","id":"files","enabled":true},{"type":"module","id":"insights","enabled":true},{"type":"module","id":"settings","enabled":true,"locked":true}]	All Czech Republic drugs available. Data taken from State Institute for Drug Control - Open Data	en-US	\N	\N	dark	Directus Color Match	{}	Directus Default	\N	\N	\N	\N	f	t	\N	\N
 \.
-
 
 --
 -- Data for Name: directus_translations; Type: TABLE DATA; Schema: public; Owner: directus
@@ -1645,15 +1599,6 @@ d719018b-774d-4153-8c89-7fe8ab594752	cs-CZ	czech_name	Český název
 ad796ca3-ce1a-4540-9a98-f7e44350a000	en-US	latin_name	Latin name
 \.
 
-
---
--- Data for Name: directus_users; Type: TABLE DATA; Schema: public; Owner: directus
---
-
-COPY public.directus_users (id, first_name, last_name, email, password, location, title, description, tags, avatar, language, tfa_secret, status, role, token, last_access, last_page, provider, external_identifier, auth_data, email_notifications, appearance, theme_dark, theme_light, theme_light_overrides, theme_dark_overrides, household) FROM stdin;
-f449a9df-fb67-4f14-b321-cdbffc985383	Nick	Settler	moiseevnikita14@gmail.com	$argon2id$v=19$m=65536,t=3,p=4$rw/wDVYC4fK8S4LgFGPoiA$ADIqs3FRaU6b11NkTtYxb/mas45ZU0qynFgj73uTeas	\N	\N	\N	\N	\N	\N	\N	active	68e30277-d231-498d-bb37-9ca24e60a38c	\N	2024-06-18 00:12:15.172+00	/settings/flows	default	\N	\N	t	\N	\N	\N	\N	\N	\N
-\.
-
 --
 -- Name: composition_id_seq; Type: SEQUENCE SET; Schema: public; Owner: directus
 --
@@ -1665,7 +1610,7 @@ SELECT pg_catalog.setval('public.composition_id_seq', 1467928, true);
 -- Name: directus_activity_id_seq; Type: SEQUENCE SET; Schema: public; Owner: directus
 --
 
-SELECT pg_catalog.setval('public.directus_activity_id_seq', 1201039, true);
+SELECT pg_catalog.setval('public.directus_activity_id_seq', 1201048, true);
 
 
 --
@@ -1693,7 +1638,7 @@ SELECT pg_catalog.setval('public.directus_permissions_id_seq', 235, true);
 -- Name: directus_presets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: directus
 --
 
-SELECT pg_catalog.setval('public.directus_presets_id_seq', 100, true);
+SELECT pg_catalog.setval('public.directus_presets_id_seq', 103, true);
 
 
 --
@@ -1707,7 +1652,7 @@ SELECT pg_catalog.setval('public.directus_relations_id_seq', 76, true);
 -- Name: directus_revisions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: directus
 --
 
-SELECT pg_catalog.setval('public.directus_revisions_id_seq', 784494, true);
+SELECT pg_catalog.setval('public.directus_revisions_id_seq', 784501, true);
 
 
 --
