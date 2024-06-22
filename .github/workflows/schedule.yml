@@ -31,19 +31,19 @@ jobs:
 
           - name: Check for new data
             id: check_for_new_data
+            continue-on-error: true
             run: |
               npm run run:check
               echo "exitcode=$?" >> $GITHUB_OUTPUT
 
           - name: Get latest version
+            if: steps.check_for_new_data.outputs.exitcode == 1
             id: get_latest_version
-            continue-on-error: true
             run: |
               echo "version=$(bun run run:get-version)" >> $GITHUB_OUTPUT
 
           - name: Create release
             if: steps.check_for_new_data.outputs.exitcode == 1
             uses: softprops/action-gh-release@v2
-            continue-on-error: true
             with:
               tag_name: ${{ steps.get_latest_version.outputs.version }}
