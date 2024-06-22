@@ -8,7 +8,7 @@ export const getDLPLink = async (): Promise<string> =>
     puppeteer
       .launch({
         headless: true,
-        timeout: 1000 * 60 * 5,
+        timeout: 0,
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
