@@ -13,6 +13,8 @@ jobs:
     check_for_new_data:
         name: Check for new data
         runs-on: ubuntu-latest
+        outputs:
+          new_data: ${{ steps.check_for_new_data.outputs.new_data }}
         steps:
           - uses: actions/checkout@v3
 
@@ -50,3 +52,10 @@ jobs:
             uses: softprops/action-gh-release@v2
             with:
               tag_name: ${{ steps.get_latest_version.outputs.version }}
+
+    build_database:
+      name: Build medicines database
+      needs:
+        - check_for_new_data
+      if: needs.check_for_new_data.outputs.new_data == 1
+      uses: ./github/workflows/release.yml

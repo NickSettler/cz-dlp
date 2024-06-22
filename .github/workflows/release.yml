@@ -4,6 +4,7 @@ on:
   release:
     types:
       - published
+  workflow_call:
 
 env:
   DATA_URL: ${{ secrets.DATA_URL }}
