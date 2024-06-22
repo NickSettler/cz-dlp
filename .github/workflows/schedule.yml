@@ -10,52 +10,52 @@ env:
   DATA_URL: ${{ secrets.DATA_URL }}
 
 jobs:
-    check_for_new_data:
-        name: Check for new data
-        runs-on: ubuntu-latest
-        outputs:
-          new_data: ${{ steps.check_for_new_data.outputs.new_data }}
-        steps:
-          - uses: actions/checkout@v3
+  check_for_new_data:
+    name: Check for new data
+    runs-on: ubuntu-latest
+    outputs:
+      new_data: ${{ steps.check_for_new_data.outputs.new_data }}
+    steps:
+      - uses: actions/checkout@v3
 
-          - name: Add GitHub repo
-            run: |
-              touch .env
-              echo "GITHUB_REPO=${{ github.repository }}" >> .env
+      - name: Add GitHub repo
+        run: |
+          touch .env
+          echo "GITHUB_REPO=${{ github.repository }}" >> .env
 
-          - name: Setup bun
-            uses: oven-sh/setup-bun@v1
-            with:
-              bun-version: latest
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
 
-          - name: Install dependencies
-            run: bun install
+      - name: Install dependencies
+        run: bun install
 
-          - name: Check for new data
-            id: check_for_new_data
-            continue-on-error: true
-            shell: bash
-            run: |
-              set -e
-              EXIT_CODE=0
-              npm run run:check || EXIT_CODE=$? 
-              echo "new_data=$EXIT_CODE" >> $GITHUB_OUTPUT
+      - name: Check for new data
+        id: check_for_new_data
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -e
+          EXIT_CODE=0
+          npm run run:check || EXIT_CODE=$? 
+          echo "new_data=$EXIT_CODE" >> $GITHUB_OUTPUT
 
-          - name: Get latest version
-            if: steps.check_for_new_data.outputs.new_data == 1
-            id: get_latest_version
-            run: |
-              echo "version=$(bun run run:get-version)" >> $GITHUB_OUTPUT
+      - name: Get latest version
+        if: steps.check_for_new_data.outputs.new_data == 1
+        id: get_latest_version
+        run: |
+          echo "version=$(bun run run:get-version)" >> $GITHUB_OUTPUT
 
-          - name: Create release
-            if: steps.check_for_new_data.outputs.new_data == 1
-            uses: softprops/action-gh-release@v2
-            with:
-              tag_name: ${{ steps.get_latest_version.outputs.version }}
+      - name: Create release
+        if: steps.check_for_new_data.outputs.new_data == 1
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_latest_version.outputs.version }}
 
-    build_database:
-      name: Build medicines database
-      needs:
-        - check_for_new_data
-      if: needs.check_for_new_data.outputs.new_data == 1
-      uses: ./github/workflows/release.yml
+  build_database:
+    name: Build medicines database
+    needs:
+      - check_for_new_data
+    if: needs.check_for_new_data.outputs.new_data == 1
+    uses: ./github/workflows/release.yml
