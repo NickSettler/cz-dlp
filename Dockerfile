@@ -40,4 +40,10 @@ ADD docker/postgres/sql /docker-entrypoint-initdb.d
 
 COPY --from=download ${TRANSFORMED_DIRECTORY} /docker-entrypoint-initdb.d
 
+RUN cat /usr/local/bin/docker-entrypoint.sh > init.sh && \
+    echo "docker_process_init_files /docker-entrypoint-initdb.d/*" >> init.sh && \
+    chmod +x init.sh
+
+ENTRYPOINT ["./init.sh"]
+
 CMD ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
