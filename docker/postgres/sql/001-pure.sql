@@ -1790,7 +1790,7 @@ SELECT pg_catalog.setval('public.directus_settings_id_seq', 1, true);
 
 
 
-SELECT public.create_constraint_if_not_exists('public."VPOIS"', 'VPOIS_pkey', 'PRIMARY KEY (code)');
+SELECT public.create_constraint_if_not_exists('public."VPOIS"', 'vpois_pkey', 'PRIMARY KEY (code)');
 SELECT public.create_constraint_if_not_exists('public.addiction', 'addiction_pkey', 'PRIMARY KEY (code)');
 SELECT public.create_constraint_if_not_exists('public.atc', 'atc_pkey', 'PRIMARY KEY (atc)');
 SELECT public.create_constraint_if_not_exists('public.composition', 'composition_pkey', 'PRIMARY KEY (id)');
