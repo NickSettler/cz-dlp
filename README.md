@@ -36,6 +36,12 @@ The `POSTGRES_PASSWORD`, `POSTGRES_DB`, and `POSTGRES_USER` environment variable
 
 In order to change this user, you should modify the [001-pure.sql](docker/postgres/sql/001-pure.sql) file.
 
+## Docker Hub
+
+Built images are located at the Docker Hub repository: https://hub.docker.com/r/nicksettler/cz-dlp
+
 ## Data Usage
+
+Data source for the repository and related docker images is the Czech Medicines Registry (Státní ústav pro kontrolu léčiv).
 
 Data in the repository and related docker images are shared based on the terms of usage from the Czech Medicines Registry: https://opendata.sukl.cz/?q=podminky-uziti-otevrenych-dat
