@@ -35,3 +35,7 @@ docker run -d \
 The `POSTGRES_PASSWORD`, `POSTGRES_DB`, and `POSTGRES_USER` environment variables are required for the PostgreSQL database. The `POSTGRES_USER` should be set to `directus` as the SQL scripts are set up to use this user as the owner of the tables.
 
 In order to change this user, you should modify the [001-pure.sql](docker/postgres/sql/001-pure.sql) file.
+
+## Data Usage
+
+Data in the repository and related docker images are shared based on the terms of usage from the Czech Medicines Registry: https://opendata.sukl.cz/?q=podminky-uziti-otevrenych-dat
