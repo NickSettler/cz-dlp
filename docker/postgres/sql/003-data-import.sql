@@ -245,6 +245,13 @@ COPY tmp FROM '/docker-entrypoint-initdb.d/dlp_lecivepripravky.json';
 
 TRUNCATE drugs CASCADE;
 
+INSERT INTO forms (form, name, name_en)
+SELECT q.form, q.form, q.form
+FROM tmp,
+     json_populate_record(null::drugs, c::json) AS q
+WHERE q.form IS NOT NULL
+ON CONFLICT DO NOTHING;
+
 INSERT INTO legal_registration_base (code, name)
 SELECT q.legal_registration_base, q.legal_registration_base
 FROM tmp,
@@ -264,5 +271,12 @@ INSERT INTO drugs
 SELECT q.*
 FROM tmp,
      json_populate_record(null::drugs, c::json) AS q;
+
+INSERT INTO drugs_ingredients (drugs_code, ingredients_code)
+SELECT
+    c::json->>'code',
+    unnest(string_to_array(c::json->>'ingredients', ','))
+FROM tmp
+ON CONFLICT ON CONSTRAINT unique_drug_ingredient DO NOTHING;
 
 DROP TABLE tmp;

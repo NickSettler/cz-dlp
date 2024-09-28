@@ -29,7 +29,27 @@ COPY src src
 
 RUN bun run run
 
-FROM postgres:16.3-alpine AS database
+FROM postgres:16.3-alpine AS pure-database
+
+ARG TRANSFORMED_DIRECTORY
+
+ADD docker/postgres/pg_hba.conf /etc/postgresql/
+ADD docker/postgres/postgresql.conf /etc/postgresql/
+
+ADD docker/postgres/sql/001-pure.sql /docker-entrypoint-initdb.d
+ADD docker/postgres/sql/003-data-import.sql /docker-entrypoint-initdb.d
+
+COPY --from=download ${TRANSFORMED_DIRECTORY} /docker-entrypoint-initdb.d
+
+RUN cat /usr/local/bin/docker-entrypoint.sh > init.sh && \
+    echo "docker_process_init_files /docker-entrypoint-initdb.d/*" >> init.sh && \
+    chmod +x init.sh
+
+ENTRYPOINT ["./init.sh"]
+
+CMD ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+
+FROM postgres:16.3-alpine AS directus-database
 
 ARG TRANSFORMED_DIRECTORY
 
