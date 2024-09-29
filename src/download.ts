@@ -2,14 +2,18 @@ import { createWriteStream, existsSync, mkdirSync } from 'node:fs';
 import { Readable } from 'node:stream';
 import decompress from 'decompress';
 import { parse } from 'node-html-parser';
+import { HTMLElement } from 'node-html-parser';
+import { finished } from 'node:stream/promises';
 
-export const getDLPLink = async (): Promise<string> => {
+export const getDLPPageHTML = async (): Promise<HTMLElement> => {
   const url = new URL(process.env.DATA_URL);
 
   const html = await fetch(url.toString()).then(async (res) => res.text());
 
-  const root = parse(html);
+  return parse(html);
+};
 
+export const getDLPLink = async (root: HTMLElement): Promise<string> => {
   const hrefs = root.querySelectorAll('a').map((a) => a.getAttribute('href'));
 
   const DLPLink = hrefs.find(
@@ -23,8 +27,24 @@ export const getDLPLink = async (): Promise<string> => {
   return DLPLink;
 };
 
+const getDLPMetadataLink = async (root: HTMLElement): Promise<string> => {
+  const hrefs = root.querySelectorAll('a').map((a) => a.getAttribute('href'));
+
+  const DLPMetadataLink = hrefs.find(
+    (href) => href?.includes('DLP') && href?.endsWith('.csv'),
+  );
+
+  if (!DLPMetadataLink) {
+    throw new Error('DLP metadata link not found');
+  }
+
+  return DLPMetadataLink;
+};
+
 export const getLatestDatasetVersion = async () => {
-  const DLPLink = await getDLPLink();
+  const pageRoot = await getDLPPageHTML();
+
+  const DLPLink = await getDLPLink(pageRoot);
 
   const filename = DLPLink.split('/').pop();
 
@@ -40,7 +60,10 @@ export const getLatestDatasetVersion = async () => {
 export const getLatestData = async (sourcesPath: string) =>
   // eslint-disable-next-line no-async-promise-executor
   new Promise(async (resolve) => {
-    const DLPLink = await getDLPLink();
+    const pageRoot = await getDLPPageHTML();
+
+    const DLPLink = await getDLPLink(pageRoot);
+    const DLPMetadataLink = await getDLPMetadataLink(pageRoot);
 
     if (!existsSync(`${sourcesPath}`)) {
       mkdirSync(`${sourcesPath}`, {
@@ -49,8 +72,12 @@ export const getLatestData = async (sourcesPath: string) =>
     }
 
     const archiveStream = createWriteStream(`${sourcesPath}/dlp.zip`);
+    const metadataStream = createWriteStream(`${sourcesPath}/dlp_metadata.csv`);
 
-    const archiveFile = await fetch(DLPLink);
+    const [archiveFile, metadataFile] = await Promise.all([
+      fetch(DLPLink),
+      fetch(DLPMetadataLink),
+    ]);
 
     if (archiveFile.ok && archiveFile.body) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -58,9 +85,17 @@ export const getLatestData = async (sourcesPath: string) =>
       Readable.fromWeb(archiveFile.body).pipe(archiveStream);
     }
 
-    archiveStream.on('finish', () => {
-      resolve(true);
-    });
+    if (metadataFile.ok && metadataFile.body) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      Readable.fromWeb(metadataFile.body).pipe(metadataStream);
+    }
+
+    Promise.all([finished(archiveStream), finished(metadataStream)]).then(
+      () => {
+        resolve(true);
+      },
+    );
   });
 
 export const unzipData = async (sourcesPath: string) =>

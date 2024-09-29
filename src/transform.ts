@@ -42,15 +42,19 @@ export const transformFile = async (
   dataArray = dataArray.map((item: any) => {
     let newItem: any = {};
 
-    Object.keys(item).forEach((key) => {
-      const newKey = headerMap[key];
+    Object.entries(headerMap).forEach(([columnKey, map]) => {
+      const newKey = Array.isArray(map) ? map[0] : map;
 
-      if (Array.isArray(newKey)) {
-        newItem[newKey[0]] = newKey[1](item[key]);
+      if (newItem[newKey]) return;
+
+      if (Array.isArray(map)) {
+        const [, transformer] = map;
+
+        newItem[newKey] = transformer(item[columnKey], newItem);
         return;
       }
 
-      newItem[newKey] = item[key];
+      newItem[newKey] = item[columnKey];
     });
 
     newItem = _.mapValues(newItem, (value) => (value === '' ? null : value));

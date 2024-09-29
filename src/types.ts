@@ -1,4 +1,4 @@
-export enum E_DIRECTUS_COLLECTIONS {
+export enum E_COLLECTIONS {
   ATC = 'atc',
   DISPENSE = 'dispense',
   DOSAGE_FORM = 'dosage_form',
@@ -7,21 +7,28 @@ export enum E_DIRECTUS_COLLECTIONS {
   ROUTES = 'routes',
   COMPOSITION = 'composition',
   COMPOSITION_SIGN = 'composition_sign',
+  SALTS = 'salts',
+  SPECIFIC_CURE = 'specific_cure',
   INGREDIENTS = 'ingredients',
   SUBSTANCE = 'substance',
   UNITS = 'units',
   ADDICTION = 'addiction',
   DOPING = 'doping',
   HORMONES = 'hormones',
+  DOCUMENTS = 'documents',
   DRUGS = 'drugs',
   DRUGS_INGREDIENTS = 'drugs_ingredients',
   VPOIS = 'VPOIS',
   LEGAL_REGISTRATION_BASE = 'legal_registration_base',
   REGISTRATION_STATUS = 'registration_status',
+  SYNONYMS = 'synonyms',
   REGISTRATION_PROCEDURE = 'registration_procedure',
   SOURCE = 'source',
   ORGANIZATION = 'organization',
+  VALIDITY = 'validity',
   COUNTRY = 'country',
+  CANCELED_REGISTRATIONS = 'canceled_registrations',
+  METADATA = 'metadata',
 }
 
 export type TATC = {
@@ -132,6 +139,7 @@ export type TDrug = {
   expiration_period?: string;
   mrp_number?: string;
   safety_element?: string;
+  prescription_limitation?: string;
 };
 
 export type TDrugIngredient = {
@@ -221,28 +229,43 @@ export type TCountry = {
   edqm?: string;
 };
 
+export type TMetadata = {
+  dataset: string;
+  column_order: number;
+  column_name: string;
+  column_type: string;
+  description: string;
+};
+
 export type TSingleSchema = {
-  [E_DIRECTUS_COLLECTIONS.ATC]: TATC;
-  [E_DIRECTUS_COLLECTIONS.DISPENSE]: TDispense;
-  [E_DIRECTUS_COLLECTIONS.DOSAGE_FORM]: TDosageForm;
-  [E_DIRECTUS_COLLECTIONS.FORMS]: TForm;
-  [E_DIRECTUS_COLLECTIONS.PHARM_CLASS]: TPharmClass;
-  [E_DIRECTUS_COLLECTIONS.ROUTES]: TRoute;
-  [E_DIRECTUS_COLLECTIONS.COMPOSITION]: TComposition;
-  [E_DIRECTUS_COLLECTIONS.COMPOSITION_SIGN]: TCompositionSign;
-  [E_DIRECTUS_COLLECTIONS.INGREDIENTS]: TIngredient;
-  [E_DIRECTUS_COLLECTIONS.SUBSTANCE]: TSubstance;
-  [E_DIRECTUS_COLLECTIONS.UNITS]: TUnit;
-  [E_DIRECTUS_COLLECTIONS.ADDICTION]: TAddiction;
-  [E_DIRECTUS_COLLECTIONS.DOPING]: TDoping;
-  [E_DIRECTUS_COLLECTIONS.HORMONES]: THormone;
-  [E_DIRECTUS_COLLECTIONS.DRUGS]: TDrug;
-  [E_DIRECTUS_COLLECTIONS.DRUGS_INGREDIENTS]: TDrugIngredient;
-  [E_DIRECTUS_COLLECTIONS.VPOIS]: TVPOIS;
-  [E_DIRECTUS_COLLECTIONS.LEGAL_REGISTRATION_BASE]: TLegalRegistrationBase;
-  [E_DIRECTUS_COLLECTIONS.REGISTRATION_STATUS]: TRegistrationStatus;
-  [E_DIRECTUS_COLLECTIONS.REGISTRATION_PROCEDURE]: TRegistrationProcedure;
-  [E_DIRECTUS_COLLECTIONS.SOURCE]: TSource;
-  [E_DIRECTUS_COLLECTIONS.ORGANIZATION]: TOrganization;
-  [E_DIRECTUS_COLLECTIONS.COUNTRY]: TCountry;
+  [E_COLLECTIONS.ATC]: TATC;
+  [E_COLLECTIONS.DISPENSE]: TDispense;
+  [E_COLLECTIONS.DOSAGE_FORM]: TDosageForm;
+  [E_COLLECTIONS.FORMS]: TForm;
+  [E_COLLECTIONS.PHARM_CLASS]: TPharmClass;
+  [E_COLLECTIONS.ROUTES]: TRoute;
+  [E_COLLECTIONS.COMPOSITION]: TComposition;
+  [E_COLLECTIONS.COMPOSITION_SIGN]: TCompositionSign;
+  [E_COLLECTIONS.SALTS]: Record<string, never>;
+  [E_COLLECTIONS.SPECIFIC_CURE]: Record<string, never>;
+  [E_COLLECTIONS.INGREDIENTS]: TIngredient;
+  [E_COLLECTIONS.SUBSTANCE]: TSubstance;
+  [E_COLLECTIONS.UNITS]: TUnit;
+  [E_COLLECTIONS.ADDICTION]: TAddiction;
+  [E_COLLECTIONS.DOPING]: TDoping;
+  [E_COLLECTIONS.HORMONES]: THormone;
+  [E_COLLECTIONS.DOCUMENTS]: Record<string, never>;
+  [E_COLLECTIONS.DRUGS]: TDrug;
+  [E_COLLECTIONS.DRUGS_INGREDIENTS]: TDrugIngredient;
+  [E_COLLECTIONS.VPOIS]: TVPOIS;
+  [E_COLLECTIONS.LEGAL_REGISTRATION_BASE]: TLegalRegistrationBase;
+  [E_COLLECTIONS.REGISTRATION_STATUS]: TRegistrationStatus;
+  [E_COLLECTIONS.SYNONYMS]: Record<string, never>;
+  [E_COLLECTIONS.REGISTRATION_PROCEDURE]: TRegistrationProcedure;
+  [E_COLLECTIONS.SOURCE]: TSource;
+  [E_COLLECTIONS.ORGANIZATION]: TOrganization;
+  [E_COLLECTIONS.VALIDITY]: Record<string, never>;
+  [E_COLLECTIONS.COUNTRY]: TCountry;
+  [E_COLLECTIONS.CANCELED_REGISTRATIONS]: Record<string, never>;
+  [E_COLLECTIONS.METADATA]: TMetadata;
 };

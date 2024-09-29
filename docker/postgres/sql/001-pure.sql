@@ -138,7 +138,8 @@ CREATE TABLE IF NOT EXISTS public.drugs
     registration_name              character varying(255) NOT NULL,
     mrp_number                     character varying(255),
     legal_registration_base        character varying(255),
-    safety_element                 character varying(1)
+    safety_element                 character varying(1),
+    prescription_limitation        character varying(1)
 );
 
 CREATE TABLE IF NOT EXISTS public.drugs_ingredients
@@ -181,6 +182,15 @@ CREATE TABLE IF NOT EXISTS public.legal_registration_base
 (
     code character varying(255) NOT NULL,
     name character varying(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.metadata
+(
+    dataset      character varying(255) NOT NULL,
+    column_name  character varying(255) NOT NULL,
+    column_order numeric(10, 5)         NOT NULL,
+    column_type  character varying(255) NOT NULL,
+    description  character varying(255) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS public.organization

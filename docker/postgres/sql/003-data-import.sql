@@ -3,6 +3,17 @@ CREATE TABLE IF NOT EXISTS tmp
     c text
 );
 
+COPY tmp FROM '/docker-entrypoint-initdb.d/dlp_metadata.json';
+
+TRUNCATE metadata CASCADE;
+
+INSERT INTO metadata
+SELECT q.*
+FROM tmp,
+     json_populate_record(null::metadata, c::json) AS q;
+
+TRUNCATE tmp CASCADE;
+
 COPY tmp FROM '/docker-entrypoint-initdb.d/dlp_atc.json';
 
 TRUNCATE atc CASCADE;

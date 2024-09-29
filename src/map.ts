@@ -1,4 +1,4 @@
-import { E_DIRECTUS_COLLECTIONS, TSingleSchema } from './types.js';
+import { E_COLLECTIONS, TMetadata, TSingleSchema } from './types.js';
 import moment from 'moment';
 
 export enum E_SOURCE_FILES {
@@ -12,21 +12,28 @@ export enum E_SOURCE_FILES {
   SUBSTANCE = 'dlp_lecivelatky.csv',
   DRUGS = 'dlp_lecivepripravky.csv',
   HORMONES = 'dlp_narvla.csv',
+  DOCUMENTS = 'dlp_nazvydokumentu.csv',
   DOSAGE_FORM = 'dlp_obaly.csv',
   ORGANIZATION = 'dlp_organizace.csv',
+  VALIDITY = 'dlp_platnost.csv',
   LEGAL_REGISTRATION_BASE = 'dlp_pravnizakladreg.csv',
   REGISTRATION_PROCEDURE = 'dlp_regproc.csv',
   COMPOSITION = 'dlp_slozeni.csv',
   COMPOSITION_SIGN = 'dlp_slozenipriznak.csv',
+  SALTS = 'dlp_soli.csv',
+  SPECIFIC_CURE = 'dlp_splp.csv',
   REGISTRATION_STATUS = 'dlp_stavyreg.csv',
+  SYNONYMS = 'dlp_synonyma.csv',
   VPOIS = 'dlp_vpois.csv',
   DISPENSE = 'dlp_vydej.csv',
   ADDICTION = 'dlp_zavislost.csv',
   SOURCES = 'dlp_zdroje.csv',
   COUNTRY = 'dlp_zeme.csv',
+  CANCELED_REGISTRATIONS = 'dlp_zruseneregistrace.csv',
+  METADATA = 'dlp_metadata.csv',
 }
 
-export type TDirectusMapItem<Collection extends keyof TSingleSchema> = {
+export type TMapItem<Collection extends keyof TSingleSchema> = {
   collection: Collection;
   headersMap: Record<
     string,
@@ -35,25 +42,26 @@ export type TDirectusMapItem<Collection extends keyof TSingleSchema> = {
         keyof TSingleSchema[Collection],
         <Field extends keyof TSingleSchema[Collection]>(
           sourceValue: TSingleSchema[Collection][Field],
+          row: TSingleSchema[Collection],
         ) => any,
       ]
   >;
 };
 
-export type TDirectusMap = Record<string, TDirectusMapItem<any>>;
+export type TDirectusMap = Record<string, TMapItem<any>>;
 
 export const MAIN_MAP: TDirectusMap = {
   [E_SOURCE_FILES.ATC]: {
-    collection: E_DIRECTUS_COLLECTIONS.ATC,
+    collection: E_COLLECTIONS.ATC,
     headersMap: {
       ATC: 'atc',
       NT: 'nt',
       NAZEV: 'name',
       NAZEV_EN: 'name_en',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.ATC>,
+  } as TMapItem<E_COLLECTIONS.ATC>,
   [E_SOURCE_FILES.ROUTES]: {
-    collection: E_DIRECTUS_COLLECTIONS.ROUTES,
+    collection: E_COLLECTIONS.ROUTES,
     headersMap: {
       CESTA: 'route',
       NAZEV: 'name',
@@ -61,16 +69,16 @@ export const MAIN_MAP: TDirectusMap = {
       NAZEV_LAT: 'name_lat',
       KOD_EDQM: 'edqm',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.ROUTES>,
+  } as TMapItem<E_COLLECTIONS.ROUTES>,
   [E_SOURCE_FILES.DOPING]: {
-    collection: E_DIRECTUS_COLLECTIONS.DOPING,
+    collection: E_COLLECTIONS.DOPING,
     headersMap: {
       DOPING: 'doping',
       NAZEV: 'name',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.DOPING>,
+  } as TMapItem<E_COLLECTIONS.DOPING>,
   [E_SOURCE_FILES.FORMS]: {
-    collection: E_DIRECTUS_COLLECTIONS.FORMS,
+    collection: E_COLLECTIONS.FORMS,
     headersMap: {
       FORMA: 'form',
       NAZEV: 'name',
@@ -79,23 +87,24 @@ export const MAIN_MAP: TDirectusMap = {
       JE_KONOPI: ['is_cannabis', (value) => value === 'A'],
       KOD_EDQM: 'edqm',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.FORMS>,
+  } as TMapItem<E_COLLECTIONS.FORMS>,
   [E_SOURCE_FILES.PHARM_CLASS]: {
-    collection: E_DIRECTUS_COLLECTIONS.PHARM_CLASS,
+    collection: E_COLLECTIONS.PHARM_CLASS,
     headersMap: {
       INDSK: 'code',
       NAZEV: 'name',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.PHARM_CLASS>,
+  } as TMapItem<E_COLLECTIONS.PHARM_CLASS>,
   [E_SOURCE_FILES.UNITS]: {
-    collection: E_DIRECTUS_COLLECTIONS.UNITS,
+    collection: E_COLLECTIONS.UNITS,
     headersMap: {
       UN: 'unit',
+      JD: 'unit',
       NAZEV: 'name',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.UNITS>,
+  } as TMapItem<E_COLLECTIONS.UNITS>,
   [E_SOURCE_FILES.INGREDIENTS]: {
-    collection: E_DIRECTUS_COLLECTIONS.INGREDIENTS,
+    collection: E_COLLECTIONS.INGREDIENTS,
     headersMap: {
       KOD_LATKY: 'code',
       ZDROJ: 'source',
@@ -106,9 +115,9 @@ export const MAIN_MAP: TDirectusMap = {
       DOP: 'doping',
       NARVLA: 'hormones',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.INGREDIENTS>,
+  } as TMapItem<E_COLLECTIONS.INGREDIENTS>,
   [E_SOURCE_FILES.SUBSTANCE]: {
-    collection: E_DIRECTUS_COLLECTIONS.SUBSTANCE,
+    collection: E_COLLECTIONS.SUBSTANCE,
     headersMap: {
       KOD_LATKY: 'code',
       NAZEV_INN: 'name_intl',
@@ -116,9 +125,9 @@ export const MAIN_MAP: TDirectusMap = {
       NAZEV: 'name',
       ZAV: 'addiction',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.SUBSTANCE>,
+  } as TMapItem<E_COLLECTIONS.SUBSTANCE>,
   [E_SOURCE_FILES.DRUGS]: {
-    collection: E_DIRECTUS_COLLECTIONS.DRUGS,
+    collection: E_COLLECTIONS.DRUGS,
     headersMap: {
       // Common
       KOD_SUKL: 'code',
@@ -177,26 +186,41 @@ export const MAIN_MAP: TDirectusMap = {
       MRP_CISLO: 'mrp_number',
       PRAVNI_ZAKLAD_REGISTRACE: 'legal_registration_base',
       OCHRANNY_PRVEK: 'safety_element',
+      OMEZENI_PRESKRIPCE_SMP: 'prescription_limitation',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.DRUGS>,
+  } as TMapItem<E_COLLECTIONS.DRUGS>,
   [E_SOURCE_FILES.HORMONES]: {
-    collection: E_DIRECTUS_COLLECTIONS.HORMONES,
+    collection: E_COLLECTIONS.HORMONES,
     headersMap: {
       NARVLA: 'code',
       NAZEV: 'name',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.HORMONES>,
+  } as TMapItem<E_COLLECTIONS.HORMONES>,
+  [E_SOURCE_FILES.DOCUMENTS]: {
+    collection: E_COLLECTIONS.DOCUMENTS,
+    headersMap: {
+      KOD_SUKL: 'code',
+      PIL: 'pil_file',
+      DAT_ROZ_PIL: 'pil_date',
+      SPC: 'spc_file',
+      DAT_ROZ_SPC: 'spc_date',
+      OBAL_TEXT: 'package_text',
+      DAT_ROZ_OBAL: 'package_date',
+      NR: 'registration_approval',
+      DAT_NPM_NR: 'registration_approval_date',
+    },
+  } as TMapItem<E_COLLECTIONS.DOCUMENTS>,
   [E_SOURCE_FILES.DOSAGE_FORM]: {
-    collection: E_DIRECTUS_COLLECTIONS.DOSAGE_FORM,
+    collection: E_COLLECTIONS.DOSAGE_FORM,
     headersMap: {
       OBAL: 'form',
       NAZEV: 'name',
       NAZEV_EN: 'name_en',
       KOD_EDQM: 'edqm',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.DOSAGE_FORM>,
+  } as TMapItem<E_COLLECTIONS.DOSAGE_FORM>,
   [E_SOURCE_FILES.ORGANIZATION]: {
-    collection: E_DIRECTUS_COLLECTIONS.ORGANIZATION,
+    collection: E_COLLECTIONS.ORGANIZATION,
     headersMap: {
       ZKR_ORG: 'code',
       ZEM: 'country',
@@ -204,23 +228,32 @@ export const MAIN_MAP: TDirectusMap = {
       VYROBCE: 'manufacturer',
       DRZITEL: 'holder',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.ORGANIZATION>,
+  } as TMapItem<E_COLLECTIONS.ORGANIZATION>,
+  [E_SOURCE_FILES.VALIDITY]: {
+    collection: E_COLLECTIONS.VALIDITY,
+    headersMap: {
+      platnost_od: 'valid_from',
+      platnost_do: 'valid_till',
+      PLATNOST_OD: 'valid_from',
+      PLATNOST_DO: 'valid_till',
+    },
+  } as TMapItem<E_COLLECTIONS.VALIDITY>,
   [E_SOURCE_FILES.LEGAL_REGISTRATION_BASE]: {
-    collection: E_DIRECTUS_COLLECTIONS.LEGAL_REGISTRATION_BASE,
+    collection: E_COLLECTIONS.LEGAL_REGISTRATION_BASE,
     headersMap: {
       KOD: 'code',
       NAZEV: 'name',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.LEGAL_REGISTRATION_BASE>,
+  } as TMapItem<E_COLLECTIONS.LEGAL_REGISTRATION_BASE>,
   [E_SOURCE_FILES.REGISTRATION_PROCEDURE]: {
-    collection: E_DIRECTUS_COLLECTIONS.REGISTRATION_PROCEDURE,
+    collection: E_COLLECTIONS.REGISTRATION_PROCEDURE,
     headersMap: {
       REG_PROC: 'code',
       NAZEV: 'name',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.REGISTRATION_PROCEDURE>,
+  } as TMapItem<E_COLLECTIONS.REGISTRATION_PROCEDURE>,
   [E_SOURCE_FILES.COMPOSITION]: {
-    collection: E_DIRECTUS_COLLECTIONS.COMPOSITION,
+    collection: E_COLLECTIONS.COMPOSITION,
     headersMap: {
       KOD_SUKL: 'code',
       KOD_LATKY: 'ingredient',
@@ -230,23 +263,56 @@ export const MAIN_MAP: TDirectusMap = {
       AMNT: 'amount',
       UN: 'unit',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.COMPOSITION>,
+  } as TMapItem<E_COLLECTIONS.COMPOSITION>,
   [E_SOURCE_FILES.COMPOSITION_SIGN]: {
-    collection: E_DIRECTUS_COLLECTIONS.COMPOSITION_SIGN,
+    collection: E_COLLECTIONS.COMPOSITION_SIGN,
     headersMap: {
       S: 'code',
       VYZNAM: 'description',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.COMPOSITION_SIGN>,
+  } as TMapItem<E_COLLECTIONS.COMPOSITION_SIGN>,
+  [E_SOURCE_FILES.SALTS]: {
+    collection: E_COLLECTIONS.SALTS,
+    headersMap: {
+      KOD_LATKY: 'ingredient_code',
+      KOD_SOLI: 'salt_code',
+    },
+  } as TMapItem<E_COLLECTIONS.SALTS>,
+  [E_SOURCE_FILES.SPECIFIC_CURE]: {
+    collection: E_COLLECTIONS.SPECIFIC_CURE,
+    headersMap: {
+      KOD_SUKL: 'code',
+      DATOD: 'date_from',
+      DATDO: 'date_till',
+      DAT_OD: 'date_from',
+      DAT_DO: 'date_till',
+      POVOL_BALENI: 'package_count',
+      UCEL: 'purpose',
+      PRACOVISTE: 'workplace',
+      DISTRIBUTOR: 'distributor',
+      POZNAMKA: 'note',
+      PREDKLADATEL: 'submitter',
+      VYROBCE: 'manufacturer',
+    },
+  } as TMapItem<E_COLLECTIONS.SPECIFIC_CURE>,
   [E_SOURCE_FILES.REGISTRATION_STATUS]: {
-    collection: E_DIRECTUS_COLLECTIONS.REGISTRATION_STATUS,
+    collection: E_COLLECTIONS.REGISTRATION_STATUS,
     headersMap: {
       REG: 'code',
       NAZEV: 'name',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.REGISTRATION_STATUS>,
+  } as TMapItem<E_COLLECTIONS.REGISTRATION_STATUS>,
+  [E_SOURCE_FILES.SYNONYMS]: {
+    collection: E_COLLECTIONS.SYNONYMS,
+    headersMap: {
+      KOD_LATKY: 'ingredient_code',
+      SQ: 'order',
+      ZDROJ: 'source',
+      NAZEV: 'name',
+    },
+  } as TMapItem<E_COLLECTIONS.SYNONYMS>,
   [E_SOURCE_FILES.VPOIS]: {
-    collection: E_DIRECTUS_COLLECTIONS.VPOIS,
+    collection: E_COLLECTIONS.VPOIS,
     headersMap: {
       KOD_SUKL: 'code',
       VPOIS_NAZEV_SPOLECNOSTI: 'name',
@@ -254,35 +320,74 @@ export const MAIN_MAP: TDirectusMap = {
       VPOIS_EMAIL: 'email',
       VPOIS_TEL: 'phone',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.VPOIS>,
+  } as TMapItem<E_COLLECTIONS.VPOIS>,
   [E_SOURCE_FILES.DISPENSE]: {
-    collection: E_DIRECTUS_COLLECTIONS.DISPENSE,
+    collection: E_COLLECTIONS.DISPENSE,
     headersMap: {
       VYDEJ: 'code',
       NAZEV: 'name',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.DISPENSE>,
+  } as TMapItem<E_COLLECTIONS.DISPENSE>,
   [E_SOURCE_FILES.ADDICTION]: {
-    collection: E_DIRECTUS_COLLECTIONS.ADDICTION,
+    collection: E_COLLECTIONS.ADDICTION,
     headersMap: {
       ZAV: 'code',
       NAZEV_CS: 'name',
+      NAZEV: 'name',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.ADDICTION>,
+  } as TMapItem<E_COLLECTIONS.ADDICTION>,
   [E_SOURCE_FILES.SOURCES]: {
-    collection: E_DIRECTUS_COLLECTIONS.SOURCE,
+    collection: E_COLLECTIONS.SOURCE,
     headersMap: {
       ZDROJ: 'code',
       NAZEV: 'name',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.SOURCE>,
+  } as TMapItem<E_COLLECTIONS.SOURCE>,
   [E_SOURCE_FILES.COUNTRY]: {
-    collection: E_DIRECTUS_COLLECTIONS.COUNTRY,
+    collection: E_COLLECTIONS.COUNTRY,
     headersMap: {
       ZEM: 'code',
       NAZEV: 'name',
       NAZEV_EN: 'name_en',
       KOD_EDQM: 'edqm',
     },
-  } as TDirectusMapItem<E_DIRECTUS_COLLECTIONS.COUNTRY>,
+  } as TMapItem<E_COLLECTIONS.COUNTRY>,
+  [E_SOURCE_FILES.CANCELED_REGISTRATIONS]: {
+    collection: E_COLLECTIONS.CANCELED_REGISTRATIONS,
+    headersMap: {
+      NAZEV: 'name',
+      CESTA: 'route',
+      FORMA: 'form',
+      SILA: 'strength',
+      REGISTRACNI_CISLO: 'registration_number',
+      SOUBEZNY_DOVOZ: 'concurrent_import',
+      MRP_CISLO: 'mrp_number',
+      TYP_REGISTRACE: 'registration_type',
+      PRAVNI_ZAKLAD_REGISTRACE: 'legal_registration_base',
+      DRZITEL: 'holder',
+      ZEME_DRZITELE: 'holder_country',
+      KONEC_PLATNOSTI_REGISTRACE: 'valid_till',
+      STAV_REGISTRACE: 'registration_status',
+    },
+  } as TMapItem<E_COLLECTIONS.CANCELED_REGISTRATIONS>,
+  [E_SOURCE_FILES.METADATA]: {
+    collection: E_COLLECTIONS.METADATA,
+    headersMap: {
+      'Datová sada': 'dataset',
+      'Pořadí sloupce': ['column_order', (value) => parseInt(value, 10)],
+      'Typ položky': 'column_type',
+      Význam: 'description',
+      'Název sloupce': [
+        'column_name',
+        (value: string, row: TMetadata) => {
+          const mapItem = MAIN_MAP[`${row.dataset}.csv`];
+          const mapItemColumn = mapItem.headersMap[value];
+
+          return Array.isArray(mapItemColumn)
+            ? mapItemColumn[0]
+            : mapItemColumn;
+        },
+      ],
+    },
+  },
 };
