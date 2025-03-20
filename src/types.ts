@@ -29,6 +29,7 @@ export enum E_COLLECTIONS {
   COUNTRY = 'country',
   CANCELED_REGISTRATIONS = 'canceled_registrations',
   METADATA = 'metadata',
+  DRUG_TYPE = 'drug_type',
 }
 
 export type TATC = {
@@ -96,6 +97,7 @@ export type TDrug = {
 
   strength?: string;
   form?: TForm;
+  type?: TDrugType;
   package?: string;
   route?: TRoute;
   complement: string;
@@ -237,6 +239,12 @@ export type TMetadata = {
   description: string;
 };
 
+export type TDrugType = {
+  type: string;
+  name: string;
+  name_en: string;
+};
+
 export type TSingleSchema = {
   [E_COLLECTIONS.ATC]: TATC;
   [E_COLLECTIONS.DISPENSE]: TDispense;
@@ -268,4 +276,5 @@ export type TSingleSchema = {
   [E_COLLECTIONS.COUNTRY]: TCountry;
   [E_COLLECTIONS.CANCELED_REGISTRATIONS]: Record<string, never>;
   [E_COLLECTIONS.METADATA]: TMetadata;
+  [E_COLLECTIONS.DRUG_TYPE]: TDrugType;
 };

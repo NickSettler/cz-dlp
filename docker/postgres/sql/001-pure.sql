@@ -103,6 +103,7 @@ CREATE TABLE IF NOT EXISTS public.drugs
     name                           character varying(100) NOT NULL,
     strength                       character varying(30),
     form                           character varying(255),
+    type                           character varying(10),
     package                        character varying(32),
     route                          character varying(255),
     complement                     character varying(100) NOT NULL,
@@ -142,12 +143,11 @@ CREATE TABLE IF NOT EXISTS public.drugs
     prescription_limitation        character varying(1)
 );
 
-CREATE TABLE IF NOT EXISTS public.drugs_ingredients
+CREATE TABLE IF NOT EXISTS public.drug_type
 (
-    id               integer NOT NULL,
-    drugs_code       character varying(255),
-    ingredients_code character varying(255),
-    CONSTRAINT unique_drug_ingredient UNIQUE (drugs_code, ingredients_code)
+    type    character varying(10)  NOT NULL,
+    name    character varying(255) NOT NULL,
+    name_en character varying(255)
 );
 
 CREATE TABLE IF NOT EXISTS public.forms
@@ -289,6 +289,7 @@ SELECT public.create_constraint_if_not_exists('public.dispense', 'dispense_pkey'
 SELECT public.create_constraint_if_not_exists('public.doping', 'doping_pkey', 'PRIMARY KEY (doping)');
 SELECT public.create_constraint_if_not_exists('public.dosage_form', 'dosage_form_pkey', 'PRIMARY KEY (form)');
 SELECT public.create_constraint_if_not_exists('public.drugs_ingredients', 'drugs_ingredients_pkey', 'PRIMARY KEY (id)');
+SELECT public.create_constraint_if_not_exists('public.drug_type', 'drug_type_pkey', 'PRIMARY KEY (type)');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_pkey', 'PRIMARY KEY (code)');
 SELECT public.create_constraint_if_not_exists('public.forms', 'forms_pkey', 'PRIMARY KEY (form)');
 SELECT public.create_constraint_if_not_exists('public.hormones', 'hormones_pkey', 'PRIMARY KEY (code)');
@@ -337,6 +338,8 @@ SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_dosage_fore
                                               'FOREIGN KEY (dosage) REFERENCES public.dosage_form (form) ON DELETE SET NULL');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_form_foreign',
                                               'FOREIGN KEY (form) REFERENCES public.forms (form)');
+SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_type_foreign',
+                                              'FOREIGN KEY (type) REFERENCES public.drug_type (type)');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_hormones_foreign',
                                               'FOREIGN KEY (hormones) REFERENCES public.hormones (code) ON DELETE SET NULL');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_legal_registration_base_foreign',

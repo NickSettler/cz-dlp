@@ -58,6 +58,17 @@ FROM tmp,
 
 TRUNCATE tmp CASCADE;
 
+COPY tmp FROM '/docker-entrypoint-initdb.d/dlp_typlp.json';
+
+TRUNCATE drug_type CASCADE;
+
+INSERT INTO drug_type
+SELECT q.*
+FROM tmp,
+     json_populate_record(null::drug_type, c::json) AS q;
+
+TRUNCATE tmp CASCADE;
+
 COPY tmp FROM '/docker-entrypoint-initdb.d/dlp_indikacniskupiny.json';
 
 TRUNCATE pharm_class CASCADE;

@@ -31,6 +31,7 @@ export enum E_SOURCE_FILES {
   COUNTRY = 'dlp_zeme.csv',
   CANCELED_REGISTRATIONS = 'dlp_zruseneregistrace.csv',
   METADATA = 'dlp_metadata.csv',
+  DRUG_TYPE = 'dlp_typlp.csv',
 }
 
 export const E_SOURCE_FILES_NORMALISED = Object.fromEntries(
@@ -144,6 +145,7 @@ export const MAIN_MAP: TDirectusMap = {
       // General
       SILA: 'strength',
       FORMA: 'form',
+      TYP_LP: 'type',
       BALENI: 'package',
       CESTA: 'route',
       DOPLNEK: 'complement',
@@ -397,4 +399,12 @@ export const MAIN_MAP: TDirectusMap = {
       ],
     },
   },
+  [E_SOURCE_FILES_NORMALISED.DRUG_TYPE]: {
+    collection: E_COLLECTIONS.DRUG_TYPE,
+    headersMap: {
+      TYP_LP: 'type',
+      NAZEV: 'name',
+      NAZEV_EN: 'name_en',
+    },
+  } as TMapItem<E_COLLECTIONS.DRUG_TYPE>,
 };
