@@ -29,6 +29,19 @@ END;
 $BODY$
     LANGUAGE plpgsql VOLATILE;
 
+CREATE OR REPLACE FUNCTION public.create_index_if_not_exists(t_name text, c_name text)
+    RETURNS void
+AS
+$BODY$
+DECLARE
+    index_name varchar;
+BEGIN
+    index_name = t_name || '_' || replace(replace(c_name, ',', ''), ' ', '_') || '_index';
+    EXECUTE 'CREATE INDEX IF NOT EXISTS ' || index_name || ' ON public.' || t_name || ' (' || c_name || ');';
+END;
+$BODY$
+    LANGUAGE plpgsql VOLATILE;
+
 CREATE TABLE IF NOT EXISTS public."VPOIS"
 (
     code  character varying(255) NOT NULL,
@@ -299,61 +312,87 @@ SELECT public.create_constraint_if_not_exists('public.units', 'units_pkey', 'PRI
 
 
 SELECT public.create_constraint_if_not_exists('public.composition', 'composition_ingredient_foreign',
-                                              'FOREIGN KEY (ingredient) REFERENCES public.ingredients (code) ON DELETE SET NULL');
                                               'FOREIGN KEY (ingredient_code) REFERENCES public.ingredients (code) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('ingredients', 'code');
 SELECT public.create_constraint_if_not_exists('public.composition', 'composition_sign_foreign',
                                               'FOREIGN KEY (sign) REFERENCES public.composition_sign (code) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('composition_sign', 'code');
 SELECT public.create_constraint_if_not_exists('public.composition', 'composition_unit_foreign',
                                               'FOREIGN KEY (unit) REFERENCES public.units (unit) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.drugs_ingredients', 'drugs_ingredients_drugs_code_foreign',
-                                              'FOREIGN KEY (drugs_code) REFERENCES public.drugs (code) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.drugs_ingredients', 'drugs_ingredients_ingredients_code_foreign',
-                                              'FOREIGN KEY (ingredients_code) REFERENCES public.ingredients (code) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('units', 'unit');
+
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_actual_organization_foreign',
                                               'FOREIGN KEY (actual_organization, actual_organization_country) REFERENCES public.organization (code, country) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('organization', 'code, country');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_addiction_foreign',
                                               'FOREIGN KEY (addiction) REFERENCES public.addiction (code) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('addiction', 'code');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_atc_foreign',
                                               'FOREIGN KEY (atc) REFERENCES public.atc (atc)');
+SELECT public.create_index_if_not_exists('atc', 'atc');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_concurrent_import_organization_foreign',
                                               'FOREIGN KEY (concurrent_import_organization, concurrent_import_country) REFERENCES public.organization (code, country) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('organization', 'code, country');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_daily_unit_foreign',
                                               'FOREIGN KEY (daily_unit) REFERENCES public.units (unit) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('units', 'unit');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_dispense_foreign',
                                               'FOREIGN KEY (dispense) REFERENCES public.dispense (code) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('dispense', 'code');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_doping_foreign',
                                               'FOREIGN KEY (doping) REFERENCES public.doping (doping) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('doping', 'doping');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_dosage_foreign',
                                               'FOREIGN KEY (dosage) REFERENCES public.dosage_form (form) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('dosage_form', 'form');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_form_foreign',
                                               'FOREIGN KEY (form) REFERENCES public.forms (form)');
+SELECT public.create_index_if_not_exists('forms', 'form');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_type_foreign',
                                               'FOREIGN KEY (type) REFERENCES public.drug_type (type)');
+SELECT public.create_index_if_not_exists('drug_type', 'type');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_hormones_foreign',
                                               'FOREIGN KEY (hormones) REFERENCES public.hormones (code) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('hormones', 'code');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_legal_registration_base_foreign',
                                               'FOREIGN KEY (legal_registration_base) REFERENCES public.legal_registration_base (code) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('legal_registration_base', 'code');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_organization_foreign',
                                               'FOREIGN KEY (organization, organization_country) REFERENCES public.organization (code, country) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('organization', 'code, country');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_pharm_class_foreign',
                                               'FOREIGN KEY (pharm_class) REFERENCES public.pharm_class (code)');
+SELECT public.create_index_if_not_exists('pharm_class', 'code');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_registration_procedure_foreign',
                                               'FOREIGN KEY (registration_procedure) REFERENCES public.registration_procedure (code) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('registration_procedure', 'code');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_registration_status_foreign',
                                               'FOREIGN KEY (registration_status) REFERENCES public.registration_status (code)');
+SELECT public.create_index_if_not_exists('registration_status', 'code');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_route_foreign',
                                               'FOREIGN KEY (route) REFERENCES public.routes (route) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('routes', 'route');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_source_foreign',
                                               'FOREIGN KEY (source) REFERENCES public.source (code)');
+SELECT public.create_index_if_not_exists('source', 'code');
+
 SELECT public.create_constraint_if_not_exists('public.ingredients', 'ingredients_addiction_foreign',
                                               'FOREIGN KEY (addiction) REFERENCES public.addiction (code) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('addiction', 'code');
 SELECT public.create_constraint_if_not_exists('public.ingredients', 'ingredients_doping_foreign',
                                               'FOREIGN KEY (doping) REFERENCES public.doping (doping) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('doping', 'doping');
 SELECT public.create_constraint_if_not_exists('public.ingredients', 'ingredients_hormones_foreign',
                                               'FOREIGN KEY (hormones) REFERENCES public.hormones (code) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('hormones', 'code');
 SELECT public.create_constraint_if_not_exists('public.ingredients', 'ingredients_source_foreign',
                                               'FOREIGN KEY (source) REFERENCES public.source (code)');
+SELECT public.create_index_if_not_exists('source', 'code');
+
 SELECT public.create_constraint_if_not_exists('public.organization', 'organization_country_foreign',
                                               'FOREIGN KEY (country) REFERENCES public.country (code)');
+SELECT public.create_index_if_not_exists('country', 'code');
+
 SELECT public.create_constraint_if_not_exists('public.substance', 'substance_addiction_foreign',
                                               'FOREIGN KEY (addiction) REFERENCES public.addiction (code) ON DELETE SET NULL');
+SELECT public.create_index_if_not_exists('addiction', 'code');
