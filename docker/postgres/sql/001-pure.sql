@@ -8,6 +8,8 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
+SET work_mem = '2GB';
+SET maintenance_work_mem = '2GB';
 
 SET default_tablespace = '';
 
