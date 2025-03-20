@@ -7,17 +7,18 @@ BEGIN
 
     IF s_name IS NOT NULL THEN
         EXECUTE 'CREATE SEQUENCE IF NOT EXISTS ' || s_name ||
-            ' AS integer' ||
-            ' START WITH 1' ||
-            ' INCREMENT BY 1' ||
-            ' NO MINVALUE' ||
-            ' NO MAXVALUE' ||
-            ' CACHE 1;';
+                ' AS integer' ||
+                ' START WITH 1' ||
+                ' INCREMENT BY 1' ||
+                ' NO MINVALUE' ||
+                ' NO MAXVALUE' ||
+                ' CACHE 1;';
 
         EXECUTE 'ALTER SEQUENCE ' || s_name || ' OWNER TO CURRENT_USER;';
         EXECUTE 'ALTER SEQUENCE ' || s_name || ' OWNED BY ' || t_name || '.' || pk_name || ';';
 
-        EXECUTE 'ALTER TABLE ONLY ' || t_name || ' ALTER COLUMN ' || pk_name || ' SET DEFAULT nextval(''' || s_name || '''::regclass);';
+        EXECUTE 'ALTER TABLE ONLY ' || t_name || ' ALTER COLUMN ' || pk_name || ' SET DEFAULT nextval(''' || s_name ||
+                '''::regclass);';
     END IF;
 END;
 $BODY$
@@ -42,8 +43,6 @@ ALTER TABLE public.doping
 ALTER TABLE public.dosage_form
     OWNER TO CURRENT_USER;
 ALTER TABLE public.drugs
-    OWNER TO CURRENT_USER;
-ALTER TABLE public.drugs_ingredients
     OWNER TO CURRENT_USER;
 ALTER TABLE public.forms
     OWNER TO CURRENT_USER;
@@ -71,6 +70,15 @@ ALTER TABLE public.units
     OWNER TO CURRENT_USER;
 
 
+CREATE TABLE IF NOT EXISTS public.directus_access
+(
+    id     uuid NOT NULL,
+    role   uuid,
+    "user" uuid,
+    policy uuid NOT NULL,
+    sort   integer
+);
+
 CREATE TABLE IF NOT EXISTS public.directus_activity
 (
     id          integer                                            NOT NULL,
@@ -88,7 +96,7 @@ CREATE TABLE IF NOT EXISTS public.directus_activity
 CREATE TABLE IF NOT EXISTS public.directus_collections
 (
     collection              character varying(64)                                    NOT NULL,
-    icon                    character varying(30),
+    icon                    character varying(64),
     note                    text,
     display_template        character varying(255),
     hidden                  boolean                DEFAULT false                     NOT NULL,
@@ -109,11 +117,23 @@ CREATE TABLE IF NOT EXISTS public.directus_collections
     versioning              boolean                DEFAULT false                     NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS public.directus_comments
+(
+    id           uuid                   NOT NULL,
+    collection   character varying(64)  NOT NULL,
+    item         character varying(255) NOT NULL,
+    comment      text                   NOT NULL,
+    date_created timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    date_updated timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    user_created uuid,
+    user_updated uuid
+);
+
 CREATE TABLE IF NOT EXISTS public.directus_dashboards
 (
     id           uuid                                                            NOT NULL,
     name         character varying(255)                                          NOT NULL,
-    icon         character varying(30)    DEFAULT 'dashboard'::character varying NOT NULL,
+    icon         character varying(64)    DEFAULT 'dashboard'::character varying NOT NULL,
     note         text,
     date_created timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     user_created uuid,
@@ -162,7 +182,7 @@ CREATE TABLE IF NOT EXISTS public.directus_files
     type              character varying(255),
     folder            uuid,
     uploaded_by       uuid,
-    uploaded_on       timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    created_on        timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     modified_by       uuid,
     modified_on       timestamp with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     charset           character varying(50),
@@ -176,14 +196,17 @@ CREATE TABLE IF NOT EXISTS public.directus_files
     tags              text,
     metadata          json,
     focal_point_x     integer,
-    focal_point_y     integer
+    focal_point_y     integer,
+    tus_id            character varying(64),
+    tus_data          json,
+    uploaded_on       timestamp with time zone
 );
 
 CREATE TABLE IF NOT EXISTS public.directus_flows
 (
     id             uuid                                                         NOT NULL,
     name           character varying(255)                                       NOT NULL,
-    icon           character varying(30),
+    icon           character varying(64),
     color          character varying(255),
     description    text,
     status         character varying(255)   DEFAULT 'active'::character varying NOT NULL,
@@ -243,7 +266,7 @@ CREATE TABLE IF NOT EXISTS public.directus_panels
     id           uuid                                   NOT NULL,
     dashboard    uuid                                   NOT NULL,
     name         character varying(255),
-    icon         character varying(30)    DEFAULT NULL::character varying,
+    icon         character varying(64)    DEFAULT NULL::character varying,
     color        character varying(10),
     show_header  boolean                  DEFAULT false NOT NULL,
     note         text,
@@ -260,13 +283,25 @@ CREATE TABLE IF NOT EXISTS public.directus_panels
 CREATE TABLE IF NOT EXISTS public.directus_permissions
 (
     id          integer               NOT NULL,
-    role        uuid,
     collection  character varying(64) NOT NULL,
     action      character varying(10) NOT NULL,
     permissions json,
     validation  json,
     presets     json,
-    fields      text
+    fields      text,
+    policy      uuid                  NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.directus_policies
+(
+    id           uuid                                                     NOT NULL,
+    name         character varying(100)                                   NOT NULL,
+    icon         character varying(64) DEFAULT 'badge'::character varying NOT NULL,
+    description  text,
+    ip_access    text,
+    enforce_tfa  boolean               DEFAULT false                      NOT NULL,
+    admin_access boolean               DEFAULT false                      NOT NULL,
+    app_access   boolean               DEFAULT false                      NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS public.directus_presets
@@ -282,7 +317,7 @@ CREATE TABLE IF NOT EXISTS public.directus_presets
     layout_options   json,
     refresh_interval integer,
     filter           json,
-    icon             character varying(30)  DEFAULT 'bookmark'::character varying,
+    icon             character varying(64)  DEFAULT 'bookmark'::character varying,
     color            character varying(255)
 );
 
@@ -314,14 +349,11 @@ CREATE TABLE IF NOT EXISTS public.directus_revisions
 
 CREATE TABLE IF NOT EXISTS public.directus_roles
 (
-    id           uuid                                                                      NOT NULL,
-    name         character varying(100)                                                    NOT NULL,
-    icon         character varying(30) DEFAULT 'supervised_user_circle'::character varying NOT NULL,
-    description  text,
-    ip_access    text,
-    enforce_tfa  boolean               DEFAULT false                                       NOT NULL,
-    admin_access boolean               DEFAULT false                                       NOT NULL,
-    app_access   boolean               DEFAULT true                                        NOT NULL
+    id          uuid                                                                      NOT NULL,
+    name        character varying(100)                                                    NOT NULL,
+    icon        character varying(64) DEFAULT 'supervised_user_circle'::character varying NOT NULL,
+    description text,
+    parent      uuid
 );
 
 CREATE TABLE IF NOT EXISTS public.directus_sessions
@@ -438,7 +470,8 @@ CREATE TABLE IF NOT EXISTS public.directus_versions
     date_created timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     date_updated timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     user_created uuid,
-    user_updated uuid
+    user_updated uuid,
+    delta        json
 );
 
 CREATE TABLE IF NOT EXISTS public.directus_webhooks
@@ -458,8 +491,10 @@ CREATE TABLE IF NOT EXISTS public.directus_webhooks
 
 
 
+SELECT alter_directus_table('public.directus_access');
 SELECT alter_directus_table('public.directus_activity', 'public.directus_activity_id_seq');
 SELECT alter_directus_table('public.directus_collections');
+SELECT alter_directus_table('public.directus_comments');
 SELECT alter_directus_table('public.directus_dashboards');
 SELECT alter_directus_table('public.directus_extensions');
 SELECT alter_directus_table('public.directus_fields', 'public.directus_fields_id_seq');
@@ -471,6 +506,7 @@ SELECT alter_directus_table('public.directus_notifications', 'public.directus_no
 SELECT alter_directus_table('public.directus_operations');
 SELECT alter_directus_table('public.directus_panels');
 SELECT alter_directus_table('public.directus_permissions', 'public.directus_permissions_id_seq');
+SELECT alter_directus_table('public.directus_policies');
 SELECT alter_directus_table('public.directus_presets', 'public.directus_presets_id_seq');
 SELECT alter_directus_table('public.directus_relations', 'public.directus_relations_id_seq');
 SELECT alter_directus_table('public.directus_revisions', 'public.directus_revisions_id_seq');
@@ -485,6 +521,23 @@ SELECT alter_directus_table('public.directus_webhooks', 'public.directus_webhook
 
 
 
+CREATE TEMP TABLE directus_access_temp AS
+SELECT *
+FROM public.directus_access
+    WITH NO DATA;
+
+COPY directus_access_temp (id, role, "user", policy, sort) FROM stdin;
+45f921dc-4d51-4477-9dc6-53e70300e5af	\N	\N	abf8a154-5b1c-4a46-ac9c-7300570f4f17	1
+\.
+
+INSERT INTO public.directus_access
+SELECT *
+FROM directus_access_temp
+ON CONFLICT DO NOTHING;
+
+DROP TABLE directus_access_temp;
+
+
 CREATE TEMP TABLE directus_collections_temp AS
 SELECT *
 FROM public.directus_collections
@@ -494,35 +547,35 @@ COPY directus_collections_temp (collection, icon, note, display_template, hidden
                                 archive_field, archive_app_filter, archive_value, unarchive_value, sort_field,
                                 accountability, color, item_duplication_fields, sort, "group", collapse, preview_url,
                                 versioning) FROM stdin;
-Sources	folder	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#2ECDA7	\N	6	\N	open	\N	f
 source	barcode	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#2ECDA7	\N	1	Sources	open	\N	f
 organization	account_balance	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#2ECDA7	\N	2	Sources	open	\N	f
 country	globe_uk	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#2ECDA7	\N	3	Sources	open	\N	f
-general	circle	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#3399FF	\N	1	\N	open	\N	f
-Composition	stacked_bar_chart	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#FFA439	\N	2	\N	open	\N	f
-composition	view_compact	\N	\N	f	f	\N	\N	t	\N	\N	order	all	#FFA439	\N	1	Composition	open	\N	f
-composition_sign	exposure_neg_1	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#FFA439	\N	2	Composition	open	\N	f
-ingredients	format_list_bulleted	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#FFA439	\N	3	Composition	open	\N	f
-substance	pie_chart	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#FFA439	\N	4	Composition	open	\N	f
-units	percent	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#FFA439	\N	5	Composition	open	\N	f
 dispense	back_hand	Dispense information	{{code}} - {{name}}	f	f	[{"language":"en-US","translation":"Dispense","singular":"Dispense type","plural":"Dispense types"},{"language":"cs-CZ","translation":"Výdej","singular":"Způsob výdeje","plural":"Způsoby výdeje"},{"language":"ru-RU","translation":"Выдача","singular":"Способ выдачи","plural":"Способы выдачи"}]	\N	t	\N	\N	\N	all	#3399FF	\N	2	general	open	\N	f
 dosage_form	thermostat_carbon	Dosage form	{{form}} - {{name}}	f	f	\N	\N	t	\N	\N	\N	all	#3399FF	\N	3	general	open	\N	f
 forms	medication_liquid	Medical form	{{form}} - {{name}} ({{name_lat}})	f	f	[{"language":"en-US","translation":"Forms","singular":"Form","plural":"Forms"}]	\N	t	\N	\N	\N	all	#3399FF	\N	4	general	open	\N	f
 pharm_class	123	Pharmacologic Class	{{code}} - {{name}}	f	f	\N	\N	t	\N	\N	\N	all	#3399FF	\N	5	general	open	\N	f
 routes	conversion_path	Medicine application route	\N	f	f	\N	\N	t	\N	\N	\N	all	#3399FF	\N	6	general	open	\N	f
-Effects	folder	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#E35169	\N	3	\N	open	\N	f
 addiction	potted_plant	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#E35169	\N	1	Effects	open	\N	f
 doping	add	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#E35169	\N	2	Effects	open	\N	f
 hormones	woman	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#E35169	\N	3	Effects	open	\N	f
-Registration	unknown_document	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#A2B5CD	\N	5	\N	open	\N	f
 VPOIS	house_siding	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#A2B5CD	\N	1	Registration	open	\N	f
 legal_registration_base	document_scanner	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#A2B5CD	\N	2	Registration	open	\N	f
 registration_status	incomplete_circle	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#A2B5CD	\N	3	Registration	open	\N	f
 registration_procedure	function	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#A2B5CD	\N	4	Registration	open	\N	f
 atc	full_stacked_bar_chart	Anatomical Therapeutic Chemical code	{{atc}} / {{name}} ({{name_en}})	f	f	[{"language":"en-US","translation":"Anatomical Therapeutic Chemical codes","singular":"Anatomical Therapeutic Chemical code","plural":"Anatomical Therapeutic Chemical codes"},{"language":"cs-CZ","translation":"Anatomicko-terapeuticko-chemická skupiny","singular":"Anatomicko-terapeuticko-chemická skupina","plural":"Anatomicko-terapeuticko-chemická skupiny"},{"language":"ru-RU","translation":"Анатомо-терапевтическо-химическая классификация","singular":"Анатомо-терапевтическо-химический код","plural":"Анатомо-терапевтическо-химический коды"}]	\N	t	\N	\N	\N	all	#3399FF	\N	1	general	open	\N	f
+general	circle	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#3399FF	\N	1	\N	open	\N	f
+Composition	stacked_bar_chart	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#FFA439	\N	2	\N	open	\N	f
+Effects	folder	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#E35169	\N	3	\N	open	\N	f
 Drugs	star	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#6644FF	\N	4	\N	open	\N	f
-drugs	pill	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#6644FF	\N	1	Drugs	open	\N	f
-drugs_ingredients	import_export	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#6644FF	\N	2	Drugs	open	\N	f
+Registration	unknown_document	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#A2B5CD	\N	5	\N	open	\N	f
+Sources	folder	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#2ECDA7	\N	6	\N	open	\N	f
+composition	view_compact	\N	\N	f	f	\N	\N	t	\N	\N	order	all	#FFA439	\N	1	Composition	open	\N	f
+composition_sign	exposure_neg_1	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#FFA439	\N	2	Composition	open	\N	f
+drugs	pill	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#6644FF	\N	2	Drugs	open	\N	f
+ingredients	format_list_bulleted	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#FFA439	\N	3	Composition	open	\N	f
+substance	pie_chart	\N	\N	f	f	\N	\N	t	\N	\N	\N	all	#FFA439	\N	5	Composition	open	\N	f
+drug_type	event_list	Drug type	\N	f	f	\N	\N	t	\N	\N	\N	all	#FFA439	\N	4	Composition	open	\N	f
+units	percent	Measurement units	\N	f	f	\N	\N	t	\N	\N	\N	all	#FFA439	\N	6	Composition	open	\N	f
 \.
 
 INSERT INTO public.directus_collections
@@ -543,56 +596,27 @@ COPY directus_fields_temp (id, collection, field, special, interface, options, d
                            hidden, sort, width, translations, note, conditions, required, "group", validation,
                            validation_message) FROM stdin;
 178	drugs	effects	alias,no-data,group	group-detail	{"start":"closed"}	\N	\N	f	f	9	full	\N	\N	\N	f	\N	\N	\N
-86	composition	amount	\N	input	\N	formatted-value	{"format":true,"font":"monospace"}	f	f	6	full	\N	\N	\N	f	\N	\N	\N
-39	hormones	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
-40	hormones	name	\N	input	\N	formatted-value	\N	f	f	2	full	\N	\N	\N	t	\N	\N	\N
-27	source	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
-28	source	name	\N	input	\N	formatted-value	{}	f	f	2	full	\N	\N	\N	t	\N	\N	\N
-63	VPOIS	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
 33	units	unit	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
-34	units	name	\N	input	\N	formatted-value	\N	f	f	2	full	\N	\N	\N	t	\N	\N	\N
-35	addiction	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
-36	addiction	name	\N	input	\N	formatted-value	\N	f	f	2	full	\N	\N	\N	t	\N	\N	\N
 37	doping	doping	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
-38	doping	name	\N	input	\N	formatted-value	\N	f	f	2	full	\N	\N	\N	t	\N	\N	\N
-64	VPOIS	name	\N	input	\N	formatted-value	\N	f	f	2	full	\N	\N	\N	f	\N	\N	\N
-48	organization	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
-49	organization	name	\N	input	\N	formatted-value	\N	f	f	3	full	\N	\N	\N	t	\N	\N	\N
 50	organization	country	m2o	select-dropdown-m2o	{"template":"{{name}}"}	related-values	{"template":"{{name}}"}	f	f	2	full	\N	\N	\N	t	\N	\N	\N
 51	organization	manufacturer	\N	input	\N	formatted-value	\N	f	f	4	full	\N	\N	\N	f	\N	\N	\N
 52	organization	holder	\N	input	\N	formatted-value	\N	f	f	5	full	\N	\N	\N	f	\N	\N	\N
 66	VPOIS	email	\N	input	\N	formatted-value	\N	f	f	4	full	\N	\N	\N	f	\N	\N	\N
-59	pharm_class	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
 67	VPOIS	phone	\N	input	\N	formatted-value	\N	f	f	5	full	\N	\N	\N	f	\N	\N	\N
-70	registration_procedure	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
-72	registration_status	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
-73	registration_status	name	\N	input	\N	formatted-value	\N	f	f	2	full	\N	\N	\N	t	\N	\N	\N
-76	composition_sign	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
 79	composition_sign	description	\N	input-multiline	\N	formatted-value	\N	f	f	2	full	\N	\N	\N	t	\N	\N	\N
 84	composition	sign	m2o	select-dropdown-m2o	{"template":"{{code}} - {{description}}"}	related-values	{"template":"{{code}}"}	f	f	5	full	\N	\N	\N	f	\N	\N	\N
 87	composition	unit	m2o	select-dropdown-m2o	{"template":"{{unit}} - {{name}}"}	related-values	{"template":"{{name}}"}	f	f	9	full	\N	\N	\N	f	\N	\N	\N
 80	composition	id	\N	input	\N	\N	\N	t	t	1	full	\N	\N	\N	f	\N	\N	\N
 85	composition	amount_from	\N	input	\N	formatted-value	{"format":true,"font":"monospace"}	f	f	8	full	\N	\N	\N	f	\N	\N	\N
 65	VPOIS	web	\N	input	\N	extension-display-link	{"conditionalFormatting":null}	f	f	3	full	\N	\N	\N	f	\N	\N	\N
-81	composition	code	\N	input	\N	formatted-value	{"bold":true}	f	f	2	full	\N	\N	\N	t	\N	\N	\N
-83	composition	order	\N	input	\N	formatted-value	\N	f	f	4	full	\N	\N	\N	t	\N	\N	\N
-93	legal_registration_base	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
-94	legal_registration_base	name	\N	input	\N	formatted-value	\N	f	f	2	full	\N	\N	\N	t	\N	\N	\N
 114	drugs	organization	m2o	select-dropdown-m2o	{"template":"{{code}} - {{name}}"}	related-values	{"template":"{{name}}"}	f	f	1	half	\N	\N	\N	f	sources	\N	\N
 175	drugs	composition	alias,no-data,group	group-detail	{"accordionMode":false,"start":"closed"}	\N	\N	f	f	8	full	\N	\N	\N	f	\N	\N	\N
 110	drugs	package	\N	input	\N	formatted-value	\N	f	f	3	half	\N	\N	\N	t	general	\N	\N
 41	ingredients	addiction	m2o	select-dropdown-m2o	{"template":"{{name}}"}	related-values	{"template":"{{name}}"}	f	f	6	full	\N	\N	\N	f	\N	\N	\N
-22	routes	name	\N	input	\N	formatted-value	\N	f	f	2	full	\N	\N	\N	t	\N	\N	\N
-32	ingredients	name	\N	input	\N	formatted-value	\N	f	f	5	full	\N	\N	\N	f	\N	\N	\N
 42	ingredients	doping	m2o	select-dropdown-m2o	{"template":"{{name}}"}	related-values	{"template":"{{name}}"}	f	f	7	full	\N	\N	\N	f	\N	\N	\N
 43	ingredients	hormones	m2o	select-dropdown-m2o	{"template":"{{name}}"}	related-values	{"template":"{{name}}"}	f	f	8	full	\N	\N	\N	f	\N	\N	\N
-57	substance	name	\N	input	\N	formatted-value	\N	f	f	4	full	\N	\N	\N	f	\N	\N	\N
-29	ingredients	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
 30	ingredients	source	m2o	select-dropdown-m2o	{"template":"{{name}}"}	related-values	{"template":"{{name}}"}	f	f	2	full	\N	\N	\N	f	\N	\N	\N
 58	substance	addiction	m2o	select-dropdown-m2o	{"template":"{{name}}"}	related-values	{"template":"{{name}}"}	f	f	5	full	\N	\N	\N	f	\N	\N	\N
-56	substance	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
-44	country	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
-45	country	name	\N	input	\N	formatted-value	\N	f	f	2	full	\N	\N	\N	t	\N	\N	\N
 46	country	edqm	\N	input	\N	formatted-value	\N	f	f	4	full	\N	\N	\N	t	\N	\N	\N
 109	drugs	form	m2o	select-dropdown-m2o	{"template":"{{form}} - {{name}}"}	related-values	{"template":"{{name}}"}	f	f	2	half	\N	\N	\N	t	general	\N	\N
 53	atc	atc	\N	input	\N	formatted-value	\N	f	f	1	full	[{"language":"en-US","translation":"ATC code"},{"language":"cs-CZ","translation":"ATC skupina"},{"language":"ru-RU","translation":"АТХ код"}]	ATC code	\N	t	\N	\N	\N
@@ -600,14 +624,15 @@ COPY directus_fields_temp (id, collection, field, special, interface, options, d
 16	forms	form	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	Medical form	\N	t	\N	\N	\N
 24	dosage_form	form	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	Form code	\N	t	\N	\N	\N
 26	dosage_form	edqm	\N	input	\N	formatted-value	{"icon":"barcode","border":true}	f	f	4	full	\N	$t:edqm_code	\N	f	\N	\N	\N
-25	dosage_form	name	\N	input	\N	formatted-value	\N	f	f	2	full	\N	$t:czech_name	\N	t	\N	\N	\N
-55	atc	name	\N	input	\N	formatted-value	\N	f	f	3	full	\N	$t:czech_name	\N	t	\N	\N	\N
-17	forms	name	\N	input	\N	formatted-value	\N	f	f	2	full	\N	$t:czech_name	\N	t	\N	\N	\N
 20	forms	edqm	\N	input	\N	formatted-value	{"icon":"barcode","border":true}	f	f	6	half	\N	$t:edqm_code	\N	f	\N	\N	\N
-60	pharm_class	name	\N	input	\N	formatted-value	\N	f	f	2	full	\N	$t:czech_name	\N	t	\N	\N	\N
-71	registration_procedure	name	\N	input	\N	formatted-value	\N	f	f	2	full	\N	$t:czech_name	\N	t	\N	\N	\N
 180	drugs	general	alias,no-data,group	group-detail	{"headerColor":"#3399FF","headerIcon":"circle"}	\N	\N	f	f	4	full	\N	\N	\N	f	\N	\N	\N
 111	drugs	route	m2o	select-dropdown-m2o	{"template":"{{route}} - {{name}}"}	related-values	{"template":"{{name}}"}	f	f	4	half	\N	\N	\N	f	general	\N	\N
+28	source	name	\N	input	\N	formatted-value	{}	f	f	2	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	\N	\N	t	\N	\N	\N
+63	VPOIS	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	[{"language":"en-US","translation":"Code"},{"language":"cs-CZ","translation":"Kód"},{"language":"ru-RU","translation":"Код"},{"language":"fr-FR","translation":"Code"},{"language":"de-DE","translation":"Code"},{"language":"es-ES","translation":"Código"},{"language":"it-IT","translation":"Codice"},{"language":"el-GR","translation":"Κωδικός"}]	\N	\N	t	\N	\N	\N
+35	addiction	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	[{"language":"en-US","translation":"Code"},{"language":"cs-CZ","translation":"Kód"},{"language":"ru-RU","translation":"Код"},{"language":"fr-FR","translation":"Code"},{"language":"de-DE","translation":"Code"},{"language":"es-ES","translation":"Código"},{"language":"it-IT","translation":"Codice"},{"language":"el-GR","translation":"Κωδικός"}]	\N	\N	t	\N	\N	\N
+83	composition	order	\N	input	\N	formatted-value	\N	f	f	4	full	\N	\N	\N	t	\N	\N	\N
+81	composition	drug_code	m2o	select-dropdown-m2o	{"template":"{{code}} - {{name}}"}	related-values	{"template":"{{name}}"}	f	f	2	full	[{"language":"en-US","translation":"Medicine"},{"language":"cs-CZ","translation":"Léčivý přípravek"}]	\N	\N	t	\N	\N	\N
+86	composition	amount	\N	input	\N	formatted-value	{"format":true,"font":"monospace"}	f	f	6	full	\N	$t:composition_amount	\N	f	\N	\N	\N
 113	drugs	dosage	m2o	select-dropdown-m2o	{"template":"{{form}} - {{name}}"}	related-values	{"template":"{{name}}"}	f	f	6	full	\N	\N	\N	f	general	\N	\N
 118	drugs	registration_status	m2o	select-dropdown-m2o	{"template":"{{code}} - {{name}}"}	related-values	{"template":"{{name}}"}	f	f	1	full	\N	\N	\N	t	registration	\N	\N
 122	drugs	pharm_class	m2o	select-dropdown-m2o	{"template":"{{name}}"}	related-values	{"template":"{{name}}"}	f	f	7	full	\N	\N	\N	t	general	\N	\N
@@ -617,7 +642,6 @@ COPY directus_fields_temp (id, collection, field, special, interface, options, d
 176	drugs	sources	alias,no-data,group	group-detail	{"accordionMode":false,"start":"closed"}	\N	\N	f	f	5	full	\N	\N	\N	f	\N	\N	\N
 112	drugs	complement	\N	input	\N	formatted-value	\N	f	f	5	full	\N	\N	\N	t	general	\N	\N
 146	drugs	expiration_period	\N	input	\N	formatted-value	\N	f	f	6	half	\N	\N	\N	f	miscellaneous	\N	\N
-82	composition	ingredient	m2o	select-dropdown-m2o	{"template":"{{name}}"}	related-values	{"template":"{{code}} - {{name}}"}	f	f	3	full	\N	\N	\N	f	\N	\N	\N
 123	drugs	atc	m2o	select-dropdown-m2o	{"template":"{{atc}} - {{name}}"}	related-values	{"template":"{{name}}"}	f	f	1	full	\N	\N	\N	t	miscellaneous	\N	\N
 142	drugs	supplied	\N	input	\N	formatted-value	\N	f	f	2	half	\N	\N	\N	t	miscellaneous	\N	\N
 139	drugs	addiction	m2o	select-dropdown-m2o	{"template":"{{code}} - {{name}}"}	related-values	{"template":"{{name}}"}	f	f	1	full	\N	\N	\N	f	effects	\N	\N
@@ -632,10 +656,6 @@ COPY directus_fields_temp (id, collection, field, special, interface, options, d
 147	drugs	registration_name	\N	input	\N	formatted-value	\N	f	f	7	full	\N	\N	\N	t	registration	\N	\N
 128	drugs	registration_procedure	m2o	select-dropdown-m2o	{"template":"{{code}} - {{name}}"}	related-values	{"template":"{{name}}"}	f	f	6	full	\N	\N	\N	f	registration	\N	\N
 148	drugs	mrp_number	\N	input	\N	formatted-value	\N	f	f	7	full	\N	\N	\N	f	miscellaneous	\N	\N
-107	drugs	name	\N	input	\N	formatted-value	\N	f	f	3	full	\N	\N	\N	t	\N	\N	\N
-135	drugs_ingredients	id	\N	\N	\N	\N	\N	f	t	1	full	\N	\N	\N	f	\N	\N	\N
-136	drugs_ingredients	drugs_code	\N	\N	\N	\N	\N	f	t	2	full	\N	\N	\N	f	\N	\N	\N
-137	drugs_ingredients	ingredients_code	\N	\N	\N	\N	\N	f	t	3	full	\N	\N	\N	f	\N	\N	\N
 149	drugs	legal_registration_base	m2o	select-dropdown-m2o	{"template":"{{code}} - {{name}}"}	related-values	{"template":"{{name}}"}	f	f	8	full	\N	\N	\N	f	registration	\N	\N
 143	drugs	EAN	\N	input	\N	formatted-value	\N	f	f	3	half	\N	\N	\N	f	miscellaneous	\N	\N
 116	drugs	actual_organization	m2o	select-dropdown-m2o	{"template":"{{code}} - {{name}}"}	related-values	{"template":"{{name}}"}	f	f	3	half	\N	\N	\N	f	sources	\N	\N
@@ -649,27 +669,60 @@ COPY directus_fields_temp (id, collection, field, special, interface, options, d
 130	drugs	daily_unit	m2o	select-dropdown-m2o	{"template":"{{unit}} - {{name}}"}	related-values	{"template":"{{name}}"}	f	f	2	half	\N	\N	\N	f	dispense_info	\N	\N
 115	drugs	organization_country	m2o	select-dropdown-m2o	{"template":"{{code}} - {{name}}"}	related-values	{"template":"{{name}}"}	f	f	2	half	\N	\N	\N	f	sources	\N	\N
 181	drugs	miscellaneous	alias,no-data,group	group-detail	{"start":"closed"}	\N	\N	f	f	10	full	\N	\N	\N	f	\N	\N	\N
-134	drugs	ingredients	m2m	list-m2m	{"layout":"table","enableSearchFilter":true,"enableLink":true,"fields":["ingredients_code.code","ingredients_code.name"]}	related-values	\N	f	f	1	full	\N	\N	\N	f	composition	\N	\N
-105	drugs	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	half	\N	\N	\N	t	\N	{"_and":[{"code":{"_regex":"\\\\d{7}"}}]}	\N
+134	drugs	ingredients	m2m	list-m2m	{"layout":"table","enableSearchFilter":true,"enableLink":true,"fields":["ingredient_code.code","ingredient_code.name"]}	related-values	\N	f	f	1	full	\N	\N	\N	f	composition	\N	\N
 106	drugs	notification_sign	\N	input	\N	\N	\N	f	f	2	half	\N	\N	\N	f	\N	{"_and":[{"notification_sign":{"_contains":"H"}}]}	\N
 125	drugs	concurrent_import	\N	input	\N	formatted-value	\N	f	f	5	full	\N	Usually in the form PI/xxx/yyyy	\N	f	sources	\N	\N
 21	routes	route	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	\N	\N	\N	t	\N	\N	\N
-258	routes	name_en	\N	input	\N	formatted-value	\N	f	f	3	full	\N	\N	\N	t	\N	\N	\N
 259	routes	name_lat	\N	input	\N	formatted-value	\N	f	f	4	full	\N	\N	\N	t	\N	\N	\N
 23	routes	edqm	\N	input	\N	formatted-value	{"icon":"barcode","border":true}	f	f	5	full	\N	\N	\N	f	\N	\N	\N
 263	ingredients	name_intl	\N	input	\N	formatted-value	\N	f	f	3	full	\N	\N	\N	f	\N	\N	\N
-264	ingredients	name_en	\N	input	\N	formatted-value	\N	f	f	4	full	\N	\N	\N	f	\N	\N	\N
 265	substance	name_intl	\N	input	\N	formatted-value	\N	f	f	2	full	\N	\N	\N	f	\N	\N	\N
-266	substance	name_en	\N	input	\N	formatted-value	\N	f	f	3	full	\N	\N	\N	f	\N	\N	\N
-268	country	name_en	\N	input	\N	formatted-value	\N	f	f	3	full	\N	\N	\N	t	\N	\N	\N
-61	dispense	code	\N	input	\N	formatted-value	{"bold":true,"conditionalFormatting":[{"operator":"eq","value":"V","color":"#E35169","icon":"close"},{"operator":"eq","value":"C","color":"#FFA439","icon":"counter_9"},{"operator":"eq","value":"L","color":"#FFA439","icon":"counter_9"},{"operator":"eq","value":"R","color":"#FFA439","icon":"counter_9"},{"operator":"eq","value":"P","color":"#FFC23B","icon":"counter_7"},{"operator":"eq","value":"O","color":"#FFC23B","icon":"counter_6"},{"operator":"eq","value":"F","color":"#2ECDA7","icon":"counter_0"}]}	f	f	1	full	\N	Dispense code of the drug	\N	t	\N	\N	\N
-267	dosage_form	name_en	\N	input	\N	formatted-value	\N	f	f	3	full	\N	$t:english_name	\N	t	\N	\N	\N
-257	atc	name_en	\N	input	{"iconLeft":"language_international"}	formatted-value	\N	f	f	4	full	\N	$t:english_name	\N	t	\N	\N	\N
-62	dispense	name	\N	input	\N	formatted-value	{"conditionalFormatting":[{"operator":"eq","value":"V","color":"#E35169","icon":"close"},{"operator":"eq","value":"C","color":"#FFA439","icon":"counter_9"},{"operator":"eq","value":"L","color":"#FFA439","icon":"counter_9"},{"operator":"eq","value":"R","color":"#FFA439","icon":"counter_9"},{"operator":"eq","value":"P","color":"#FFC23B","icon":"counter_7"},{"operator":"eq","value":"O","color":"#FFC23B","icon":"counter_6"},{"operator":"eq","value":"F","color":"#2ECDA7","icon":"counter_0"}]}	f	f	2	full	\N	$t:czech_name	\N	t	\N	\N	\N
-260	forms	name_en	\N	input	\N	formatted-value	\N	f	f	3	full	\N	$t:english_name	\N	t	\N	\N	\N
+268	country	name_en	\N	input	\N	formatted-value	\N	f	f	3	full	[{"language":"en-US","translation":"English name"},{"language":"cs-CZ","translation":"Název anglicky"},{"language":"ru-RU","translation":"Английское название"},{"language":"fr-FR","translation":"Nom en anglais"},{"language":"de-DE","translation":"Name auf Englisch"},{"language":"es-ES","translation":"Nombre en inglés"},{"language":"it-IT","translation":"Nombre en inglés"},{"language":"el-GR","translation":"Όνομα στα αγγλικά"}]	\N	\N	t	\N	\N	\N
+82	composition	ingredient_code	m2o	select-dropdown-m2o	{"template":"{{code}} - {{name}}"}	related-values	{"template":"{{name}}"}	f	f	3	full	[{"language":"en-US","translation":"Ingredient"},{"language":"cs-CZ","translation":"Látka"}]	\N	\N	f	\N	\N	\N
 261	forms	name_lat	\N	input	\N	formatted-value	\N	f	f	4	full	\N	$t:latin_name	\N	f	\N	\N	\N
 262	forms	is_cannabis	cast-boolean	boolean	\N	boolean	{"iconOff":"smoke_free","iconOn":"smoking_rooms","colorOff":"#2ECDA7","colorOn":"#FFA439"}	f	f	5	half	[{"language":"cs-CZ","translation":"Je konopi"}]	The form is used when prescribing medical cannabis	\N	t	\N	\N	\N
 108	drugs	strength	\N	input	\N	formatted-value	{"format":true,"conditionalFormatting":[{"operator":"contains","value":"MG","color":"#FFA439","icon":"avg_pace"},{"operator":"contains","value":"mg","color":"#FFA439","icon":"avg_pace"},{"operator":"contains","value":"ml","color":"#3399FF","icon":"water_drop"},{"operator":"contains","value":"ML","color":"#3399FF","icon":"water_drop"},{"operator":"contains","value":"%","color":"#6644FF","icon":"percent"}],"color":null}	f	f	1	half	\N	\N	[{"name":"Is milliliters","rule":{"_and":[{"_or":[{"strength":{"_contains":"ML"}},{"strength":{"_contains":"ml"}}]}]},"options":{"font":"sans-serif","trim":false,"masked":false,"clear":false,"slug":false,"iconLeft":"water_drop"}}]	f	general	\N	\N
+62	dispense	name	\N	input	\N	formatted-value	{"conditionalFormatting":[{"operator":"eq","value":"V","color":"#E35169","icon":"close"},{"operator":"eq","value":"C","color":"#FFA439","icon":"counter_9"},{"operator":"eq","value":"L","color":"#FFA439","icon":"counter_9"},{"operator":"eq","value":"R","color":"#FFA439","icon":"counter_9"},{"operator":"eq","value":"P","color":"#FFC23B","icon":"counter_7"},{"operator":"eq","value":"O","color":"#FFC23B","icon":"counter_6"},{"operator":"eq","value":"F","color":"#2ECDA7","icon":"counter_0"}]}	f	f	2	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	$t:czech_name	\N	t	\N	\N	\N
+107	drugs	name	\N	input	\N	formatted-value	\N	f	f	3	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	\N	\N	t	\N	\N	\N
+57	substance	name	\N	input	\N	formatted-value	\N	f	f	4	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	\N	\N	f	\N	\N	\N
+269	drug_type	type	\N	input	{"placeholder":"IM/BI","iconLeft":"event_list"}	formatted-value	{"icon":"line_end_square","conditionalFormatting":[{"operator":"contains","value":"/","color":"#58D0B4","icon":"line_start_square"}],"color":"#1FA888"}	f	f	\N	full	\N	Abbreviation of the type of medicinal product	\N	f	\N	{"_and":[{"type":{"_regex":"^[A-Za-z\\\\\\\\]{1,10}$"}}]}	\N
+257	atc	name_en	\N	input	{"iconLeft":"language_international"}	formatted-value	\N	f	f	4	full	[{"language":"en-US","translation":"English name"},{"language":"cs-CZ","translation":"Název anglicky"},{"language":"ru-RU","translation":"Английское название"},{"language":"fr-FR","translation":"Nom en anglais"},{"language":"de-DE","translation":"Name auf Englisch"},{"language":"es-ES","translation":"Nombre en inglés"},{"language":"it-IT","translation":"Nombre en inglés"},{"language":"el-GR","translation":"Όνομα στα αγγλικά"}]	\N	\N	t	\N	\N	\N
+45	country	name	\N	input	\N	formatted-value	\N	f	f	2	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	\N	\N	t	\N	\N	\N
+270	drug_type	name	\N	input	{"placeholder":"Rostlinné léčivé přípravky","iconLeft":"text_format"}	formatted-value	{"format":true}	f	f	\N	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	Name of the type of medicinal product	\N	f	\N	\N	\N
+94	legal_registration_base	name	\N	input	\N	formatted-value	\N	f	f	2	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	\N	\N	t	\N	\N	\N
+271	drug_type	name_en	\N	input	{"iconLeft":"text_format","placeholder":"Herbal Medicinal Product"}	formatted-value	{"format":true}	f	f	\N	full	[{"language":"en-US","translation":"English name"},{"language":"cs-CZ","translation":"Název anglicky"},{"language":"ru-RU","translation":"Английское название"},{"language":"fr-FR","translation":"Nom en anglais"},{"language":"de-DE","translation":"Name auf Englisch"},{"language":"es-ES","translation":"Nombre en inglés"},{"language":"it-IT","translation":"Nombre en inglés"},{"language":"el-GR","translation":"Όνομα στα αγγλικά"}]	Name of the type of medicinal product in English	\N	f	\N	\N	\N
+267	dosage_form	name_en	\N	input	\N	formatted-value	\N	f	f	3	full	[{"language":"en-US","translation":"English name"},{"language":"cs-CZ","translation":"Název anglicky"},{"language":"ru-RU","translation":"Английское название"},{"language":"fr-FR","translation":"Nom en anglais"},{"language":"de-DE","translation":"Name auf Englisch"},{"language":"es-ES","translation":"Nombre en inglés"},{"language":"it-IT","translation":"Nombre en inglés"},{"language":"el-GR","translation":"Όνομα στα αγγλικά"}]	$t:english_name	\N	t	\N	\N	\N
+64	VPOIS	name	\N	input	\N	formatted-value	\N	f	f	2	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	\N	\N	f	\N	\N	\N
+34	units	name	\N	input	\N	formatted-value	\N	f	f	2	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	\N	\N	t	\N	\N	\N
+40	hormones	name	\N	input	\N	formatted-value	\N	f	f	2	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	\N	\N	t	\N	\N	\N
+32	ingredients	name	\N	input	\N	formatted-value	\N	f	f	5	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	\N	\N	f	\N	\N	\N
+36	addiction	name	\N	input	\N	formatted-value	\N	f	f	2	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	\N	\N	t	\N	\N	\N
+38	doping	name	\N	input	\N	formatted-value	\N	f	f	2	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	\N	\N	t	\N	\N	\N
+60	pharm_class	name	\N	input	\N	formatted-value	\N	f	f	2	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	$t:czech_name	\N	t	\N	\N	\N
+71	registration_procedure	name	\N	input	\N	formatted-value	\N	f	f	2	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	$t:czech_name	\N	t	\N	\N	\N
+49	organization	name	\N	input	\N	formatted-value	\N	f	f	3	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	\N	\N	t	\N	\N	\N
+22	routes	name	\N	input	\N	formatted-value	\N	f	f	2	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	\N	\N	t	\N	\N	\N
+55	atc	name	\N	input	\N	formatted-value	\N	f	f	3	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	$t:czech_name	\N	t	\N	\N	\N
+25	dosage_form	name	\N	input	\N	formatted-value	\N	f	f	2	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	$t:czech_name	\N	t	\N	\N	\N
+73	registration_status	name	\N	input	\N	formatted-value	\N	f	f	2	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	\N	\N	t	\N	\N	\N
+17	forms	name	\N	input	\N	formatted-value	\N	f	f	2	full	[{"language":"en-US","translation":"Name"},{"language":"cs-CZ","translation":"Název"},{"language":"ru-RU","translation":"Название"},{"language":"fr-FR","translation":"Nom"},{"language":"de-DE","translation":"Name"},{"language":"es-ES","translation":"Nombre"},{"language":"it-IT","translation":"Nome"},{"language":"el-GR","translation":"Ονομασία"}]	$t:czech_name	\N	t	\N	\N	\N
+264	ingredients	name_en	\N	input	\N	formatted-value	\N	f	f	4	full	[{"language":"en-US","translation":"English name"},{"language":"cs-CZ","translation":"Název anglicky"},{"language":"ru-RU","translation":"Английское название"},{"language":"fr-FR","translation":"Nom en anglais"},{"language":"de-DE","translation":"Name auf Englisch"},{"language":"es-ES","translation":"Nombre en inglés"},{"language":"it-IT","translation":"Nombre en inglés"},{"language":"el-GR","translation":"Όνομα στα αγγλικά"}]	\N	\N	f	\N	\N	\N
+266	substance	name_en	\N	input	\N	formatted-value	\N	f	f	3	full	[{"language":"en-US","translation":"English name"},{"language":"cs-CZ","translation":"Název anglicky"},{"language":"ru-RU","translation":"Английское название"},{"language":"fr-FR","translation":"Nom en anglais"},{"language":"de-DE","translation":"Name auf Englisch"},{"language":"es-ES","translation":"Nombre en inglés"},{"language":"it-IT","translation":"Nombre en inglés"},{"language":"el-GR","translation":"Όνομα στα αγγλικά"}]	\N	\N	f	\N	\N	\N
+258	routes	name_en	\N	input	\N	formatted-value	\N	f	f	3	full	[{"language":"en-US","translation":"English name"},{"language":"cs-CZ","translation":"Název anglicky"},{"language":"ru-RU","translation":"Английское название"},{"language":"fr-FR","translation":"Nom en anglais"},{"language":"de-DE","translation":"Name auf Englisch"},{"language":"es-ES","translation":"Nombre en inglés"},{"language":"it-IT","translation":"Nombre en inglés"},{"language":"el-GR","translation":"Όνομα στα αγγλικά"}]	\N	\N	t	\N	\N	\N
+260	forms	name_en	\N	input	\N	formatted-value	\N	f	f	3	full	[{"language":"en-US","translation":"English name"},{"language":"cs-CZ","translation":"Název anglicky"},{"language":"ru-RU","translation":"Английское название"},{"language":"fr-FR","translation":"Nom en anglais"},{"language":"de-DE","translation":"Name auf Englisch"},{"language":"es-ES","translation":"Nombre en inglés"},{"language":"it-IT","translation":"Nombre en inglés"},{"language":"el-GR","translation":"Όνομα στα αγγλικά"}]	$t:english_name	\N	t	\N	\N	\N
+61	dispense	code	\N	input	\N	formatted-value	{"bold":true,"conditionalFormatting":[{"operator":"eq","value":"V","color":"#E35169","icon":"close"},{"operator":"eq","value":"C","color":"#FFA439","icon":"counter_9"},{"operator":"eq","value":"L","color":"#FFA439","icon":"counter_9"},{"operator":"eq","value":"R","color":"#FFA439","icon":"counter_9"},{"operator":"eq","value":"P","color":"#FFC23B","icon":"counter_7"},{"operator":"eq","value":"O","color":"#FFC23B","icon":"counter_6"},{"operator":"eq","value":"F","color":"#2ECDA7","icon":"counter_0"}]}	f	f	1	full	[{"language":"en-US","translation":"Code"},{"language":"cs-CZ","translation":"Kód"},{"language":"ru-RU","translation":"Код"},{"language":"fr-FR","translation":"Code"},{"language":"de-DE","translation":"Code"},{"language":"es-ES","translation":"Código"},{"language":"it-IT","translation":"Codice"},{"language":"el-GR","translation":"Κωδικός"}]	Dispense code of the drug	\N	t	\N	\N	\N
+59	pharm_class	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	[{"language":"en-US","translation":"Code"},{"language":"cs-CZ","translation":"Kód"},{"language":"ru-RU","translation":"Код"},{"language":"fr-FR","translation":"Code"},{"language":"de-DE","translation":"Code"},{"language":"es-ES","translation":"Código"},{"language":"it-IT","translation":"Codice"},{"language":"el-GR","translation":"Κωδικός"}]	\N	\N	t	\N	\N	\N
+93	legal_registration_base	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	[{"language":"en-US","translation":"Code"},{"language":"cs-CZ","translation":"Kód"},{"language":"ru-RU","translation":"Код"},{"language":"fr-FR","translation":"Code"},{"language":"de-DE","translation":"Code"},{"language":"es-ES","translation":"Código"},{"language":"it-IT","translation":"Codice"},{"language":"el-GR","translation":"Κωδικός"}]	\N	\N	t	\N	\N	\N
+48	organization	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	[{"language":"en-US","translation":"Code"},{"language":"cs-CZ","translation":"Kód"},{"language":"ru-RU","translation":"Код"},{"language":"fr-FR","translation":"Code"},{"language":"de-DE","translation":"Code"},{"language":"es-ES","translation":"Código"},{"language":"it-IT","translation":"Codice"},{"language":"el-GR","translation":"Κωδικός"}]	\N	\N	t	\N	\N	\N
+56	substance	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	[{"language":"en-US","translation":"Code"},{"language":"cs-CZ","translation":"Kód"},{"language":"ru-RU","translation":"Код"},{"language":"fr-FR","translation":"Code"},{"language":"de-DE","translation":"Code"},{"language":"es-ES","translation":"Código"},{"language":"it-IT","translation":"Codice"},{"language":"el-GR","translation":"Κωδικός"}]	\N	\N	t	\N	\N	\N
+70	registration_procedure	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	[{"language":"en-US","translation":"Code"},{"language":"cs-CZ","translation":"Kód"},{"language":"ru-RU","translation":"Код"},{"language":"fr-FR","translation":"Code"},{"language":"de-DE","translation":"Code"},{"language":"es-ES","translation":"Código"},{"language":"it-IT","translation":"Codice"},{"language":"el-GR","translation":"Κωδικός"}]	\N	\N	t	\N	\N	\N
+39	hormones	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	[{"language":"en-US","translation":"Code"},{"language":"cs-CZ","translation":"Kód"},{"language":"ru-RU","translation":"Код"},{"language":"fr-FR","translation":"Code"},{"language":"de-DE","translation":"Code"},{"language":"es-ES","translation":"Código"},{"language":"it-IT","translation":"Codice"},{"language":"el-GR","translation":"Κωδικός"}]	\N	\N	t	\N	\N	\N
+105	drugs	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	half	[{"language":"en-US","translation":"Code"},{"language":"cs-CZ","translation":"Kód"},{"language":"ru-RU","translation":"Код"},{"language":"fr-FR","translation":"Code"},{"language":"de-DE","translation":"Code"},{"language":"es-ES","translation":"Código"},{"language":"it-IT","translation":"Codice"},{"language":"el-GR","translation":"Κωδικός"}]	\N	\N	t	\N	{"_and":[{"code":{"_regex":"\\\\d{7}"}}]}	\N
+76	composition_sign	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	[{"language":"en-US","translation":"Code"},{"language":"cs-CZ","translation":"Kód"},{"language":"ru-RU","translation":"Код"},{"language":"fr-FR","translation":"Code"},{"language":"de-DE","translation":"Code"},{"language":"es-ES","translation":"Código"},{"language":"it-IT","translation":"Codice"},{"language":"el-GR","translation":"Κωδικός"}]	\N	\N	t	\N	\N	\N
+29	ingredients	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	[{"language":"en-US","translation":"Code"},{"language":"cs-CZ","translation":"Kód"},{"language":"ru-RU","translation":"Код"},{"language":"fr-FR","translation":"Code"},{"language":"de-DE","translation":"Code"},{"language":"es-ES","translation":"Código"},{"language":"it-IT","translation":"Codice"},{"language":"el-GR","translation":"Κωδικός"}]	\N	\N	t	\N	\N	\N
+72	registration_status	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	[{"language":"en-US","translation":"Code"},{"language":"cs-CZ","translation":"Kód"},{"language":"ru-RU","translation":"Код"},{"language":"fr-FR","translation":"Code"},{"language":"de-DE","translation":"Code"},{"language":"es-ES","translation":"Código"},{"language":"it-IT","translation":"Codice"},{"language":"el-GR","translation":"Κωδικός"}]	\N	\N	t	\N	\N	\N
+27	source	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	[{"language":"en-US","translation":"Code"},{"language":"cs-CZ","translation":"Kód"},{"language":"ru-RU","translation":"Код"},{"language":"fr-FR","translation":"Code"},{"language":"de-DE","translation":"Code"},{"language":"es-ES","translation":"Código"},{"language":"it-IT","translation":"Codice"},{"language":"el-GR","translation":"Κωδικός"}]	\N	\N	t	\N	\N	\N
+44	country	code	\N	input	\N	formatted-value	{"bold":true}	f	f	1	full	[{"language":"en-US","translation":"Code"},{"language":"cs-CZ","translation":"Kód"},{"language":"ru-RU","translation":"Код"},{"language":"fr-FR","translation":"Code"},{"language":"de-DE","translation":"Code"},{"language":"es-ES","translation":"Código"},{"language":"it-IT","translation":"Codice"},{"language":"el-GR","translation":"Κωδικός"}]	\N	\N	t	\N	\N	\N
 \.
 
 INSERT INTO public.directus_fields
@@ -764,6 +817,12 @@ COPY directus_migrations_temp (version, name, "timestamp") FROM stdin;
 20240311A	Deprecate Webhooks	2024-06-13 11:50:48.347335+00
 20240422A	Public Registration	2024-06-13 11:50:48.507546+00
 20240515A	Add Session Window	2024-06-13 11:50:48.51778+00
+20240701A	Add Tus Data	2024-11-10 23:30:18.447488+00
+20240716A	Update Files Date Fields	2024-11-10 23:30:18.45012+00
+20240806A	Permissions Policies	2024-11-10 23:30:18.464736+00
+20240817A	Update Icon Fields Length	2024-11-10 23:30:18.473837+00
+20240909A	Separate Comments	2024-11-10 23:30:18.479876+00
+20240909B	Consolidate Content Versioning	2024-11-10 23:30:18.481392+00
 \.
 
 INSERT INTO public.directus_migrations
@@ -779,30 +838,7 @@ SELECT *
 FROM public.directus_permissions
     WITH NO DATA;
 
-COPY directus_permissions_temp (id, role, collection, action, permissions, validation, presets, fields) FROM stdin;
-7	\N	forms	read	{}	{}	\N	*
-12	\N	routes	read	{}	{}	\N	*
-21	\N	dosage_form	read	{}	{}	\N	*
-23	\N	ingredients	read	{}	{}	\N	*
-30	\N	source	read	{}	{}	\N	*
-32	\N	units	read	{}	{}	\N	*
-33	\N	addiction	read	{}	{}	\N	*
-35	\N	hormones	read	{}	{}	\N	*
-36	\N	doping	read	{}	{}	\N	*
-37	\N	atc	read	{}	{}	\N	*
-38	\N	country	read	{}	{}	\N	*
-39	\N	dispense	read	{}	{}	\N	*
-40	\N	organization	read	{}	{}	\N	*
-41	\N	pharm_class	read	{}	{}	\N	*
-42	\N	substance	read	{}	{}	\N	*
-43	\N	VPOIS	read	{}	{}	\N	*
-73	\N	composition	read	{}	{}	\N	*
-74	\N	composition_sign	read	{}	{}	\N	*
-75	\N	registration_status	read	{}	{}	\N	*
-76	\N	registration_procedure	read	{}	{}	\N	*
-78	\N	legal_registration_base	read	{}	{}	\N	*
-79	\N	drugs	read	{}	{}	\N	*
-80	\N	drugs_ingredients	read	{}	{}	\N	*
+COPY directus_permissions_temp (id, collection, action, permissions, validation, presets, fields) FROM stdin;
 \.
 
 INSERT INTO public.directus_permissions
@@ -813,6 +849,23 @@ ON CONFLICT DO NOTHING;
 DROP TABLE directus_permissions_temp;
 
 
+CREATE TEMP TABLE directus_policies_temp AS
+SELECT *
+FROM public.directus_policies
+    WITH NO DATA;
+
+COPY directus_policies_temp (id, name, icon, description, ip_access, enforce_tfa, admin_access, app_access) FROM stdin;
+abf8a154-5b1c-4a46-ac9c-7300570f4f17	$t:public_label	public	$t:public_description	\N	f	f	f
+\.
+
+INSERT INTO public.directus_policies
+SELECT *
+FROM directus_policies_temp
+ON CONFLICT DO NOTHING;
+
+DROP TABLE directus_policies_temp;
+
+
 CREATE TEMP TABLE directus_relations_temp AS
 SELECT *
 FROM public.directus_relations
@@ -820,13 +873,14 @@ FROM public.directus_relations
 
 COPY directus_relations_temp (id, many_collection, many_field, one_collection, one_field, one_collection_field,
                               one_allowed_collections, junction_field, sort_field, one_deselect_action) FROM stdin;
-3	ingredients	source	source	\N	\N	\N	\N	\N	nullify
-4	ingredients	addiction	addiction	\N	\N	\N	\N	\N	nullify
-5	ingredients	doping	doping	\N	\N	\N	\N	\N	nullify
-6	ingredients	hormones	hormones	\N	\N	\N	\N	\N	nullify
-7	organization	country	country	\N	\N	\N	\N	\N	nullify
-8	substance	addiction	addiction	\N	\N	\N	\N	\N	nullify
-9	composition	ingredient	ingredients	\N	\N	\N	\N	\N	nullify
+2	ingredients	source	source	\N	\N	\N	\N	\N	nullify
+3	ingredients	addiction	addiction	\N	\N	\N	\N	\N	nullify
+4	ingredients	doping	doping	\N	\N	\N	\N	\N	nullify
+5	ingredients	hormones	hormones	\N	\N	\N	\N	\N	nullify
+6	organization	country	country	\N	\N	\N	\N	\N	nullify
+7	substance	addiction	addiction	\N	\N	\N	\N	\N	nullify
+8	composition	drug_code	drugs	\N	\N	\N	\N	\N	nullify
+9	composition	ingredient_code	ingredients	\N	\N	\N	\N	\N	nullify
 10	composition	sign	composition_sign	\N	\N	\N	\N	\N	nullify
 11	composition	unit	units	\N	\N	\N	\N	\N	nullify
 15	drugs	form	forms	\N	\N	\N	\N	\N	nullify
@@ -844,8 +898,6 @@ COPY directus_relations_temp (id, many_collection, many_field, one_collection, o
 27	drugs	registration_procedure	registration_procedure	\N	\N	\N	\N	\N	nullify
 28	drugs	daily_unit	units	\N	\N	\N	\N	\N	nullify
 29	drugs	source	source	\N	\N	\N	\N	\N	nullify
-30	drugs_ingredients	ingredients_code	ingredients	\N	\N	\N	drugs_code	\N	nullify
-31	drugs_ingredients	drugs_code	drugs	ingredients	\N	\N	ingredients_code	\N	nullify
 32	drugs	dispense	dispense	\N	\N	\N	\N	\N	nullify
 33	drugs	addiction	addiction	\N	\N	\N	\N	\N	nullify
 34	drugs	doping	doping	\N	\N	\N	\N	\N	nullify
@@ -859,6 +911,23 @@ FROM directus_relations_temp
 ON CONFLICT DO NOTHING;
 
 DROP TABLE directus_relations_temp;
+
+
+CREATE TEMP TABLE directus_roles_temp AS
+SELECT *
+FROM public.directus_roles
+    WITH NO DATA;
+
+COPY directus_roles_temp (id, name, icon, description, parent) FROM stdin;
+e70fa79c-cc4e-4633-ab6f-84006057af42	Administrator	verified	$t:admin_description	\N
+\.
+
+INSERT INTO public.directus_roles
+SELECT *
+FROM directus_roles_temp
+ON CONFLICT DO NOTHING;
+
+DROP TABLE directus_roles_temp;
 
 
 CREATE TEMP TABLE directus_settings_temp AS
@@ -899,6 +968,9 @@ d2d76e71-d69a-4a27-b457-8cf68d51ece2	cs-CZ	edqm_code	Kód EDQM
 2c37314f-bd86-481a-b6c2-6e0e256af523	cs-CZ	english_name	Anglický název
 d719018b-774d-4153-8c89-7fe8ab594752	cs-CZ	czech_name	Český název
 ad796ca3-ce1a-4540-9a98-f7e44350a000	en-US	latin_name	Latin name
+05558f17-a62a-420c-bc75-a3eb4d2ee82a	en-US	composition_amount	Amount of substance (to), for excipient only PL
+4c3c045f-70f8-4a5b-bbe5-44ac62c021c7	cs-CZ	composition_amount	Množství látky (do), pro pomocnou látku jen PL
+279afe1e-678b-4ef3-84d7-c95ab23046ff	ru-RU	composition_amount	Количество вещества (до), только для вспомогательного вещества PL
 \.
 
 INSERT INTO public.directus_translations
@@ -917,9 +989,11 @@ SELECT pg_catalog.setval('public.directus_settings_id_seq', 1, true);
 
 
 
+SELECT public.create_constraint_if_not_exists('public.directus_access', 'directus_access_pkey', 'PRIMARY KEY (id)');
 SELECT public.create_constraint_if_not_exists('public.directus_activity', 'directus_activity_pkey', 'PRIMARY KEY (id)');
 SELECT public.create_constraint_if_not_exists('public.directus_collections', 'directus_collections_pkey',
                                               'PRIMARY KEY (collection)');
+SELECT public.create_constraint_if_not_exists('public.directus_comments', 'directus_comments_pkey', 'PRIMARY KEY (id)');
 SELECT public.create_constraint_if_not_exists('public.directus_dashboards', 'directus_dashboards_pkey',
                                               'PRIMARY KEY (id)');
 SELECT public.create_constraint_if_not_exists('public.directus_extensions', 'directus_extensions_pkey',
@@ -943,6 +1017,7 @@ SELECT public.create_constraint_if_not_exists('public.directus_operations', 'dir
 SELECT public.create_constraint_if_not_exists('public.directus_panels', 'directus_panels_pkey', 'PRIMARY KEY (id)');
 SELECT public.create_constraint_if_not_exists('public.directus_permissions', 'directus_permissions_pkey',
                                               'PRIMARY KEY (id)');
+SELECT public.create_constraint_if_not_exists('public.directus_policies', 'directus_policies_pkey', 'PRIMARY KEY (id)');
 SELECT public.create_constraint_if_not_exists('public.directus_presets', 'directus_presets_pkey', 'PRIMARY KEY (id)');
 SELECT public.create_constraint_if_not_exists('public.directus_relations', 'directus_relations_pkey',
                                               'PRIMARY KEY (id)');
@@ -965,8 +1040,20 @@ SELECT public.create_constraint_if_not_exists('public.directus_webhooks', 'direc
 
 
 
+SELECT public.create_constraint_if_not_exists('public.directus_access', 'directus_access_policy_foreign',
+                                              'FOREIGN KEY (policy) REFERENCES public.directus_policies(id) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_access', 'directus_access_role_foreign',
+                                              'FOREIGN KEY (role) REFERENCES public.directus_roles(id) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_access', 'directus_access_user_foreign',
+                                              'FOREIGN KEY ("user") REFERENCES public.directus_users(id) ON DELETE CASCADE');
 SELECT public.create_constraint_if_not_exists('public.directus_collections', 'directus_collections_group_foreign',
                                               'FOREIGN KEY ("group") REFERENCES public.directus_collections (collection)');
+SELECT public.create_constraint_if_not_exists('public.directus_comments', 'directus_comments_collection_foreign',
+                                              'FOREIGN KEY (collection) REFERENCES public.directus_collections(collection) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_comments', 'directus_comments_user_created_foreign',
+                                              'FOREIGN KEY (user_created) REFERENCES public.directus_users(id) ON DELETE SET NULL');
+SELECT public.create_constraint_if_not_exists('public.directus_comments', 'directus_comments_user_updated_foreign',
+                                              'FOREIGN KEY (user_updated) REFERENCES public.directus_users(id)');
 SELECT public.create_constraint_if_not_exists('public.directus_dashboards', 'directus_dashboards_user_created_foreign',
                                               'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
 SELECT public.create_constraint_if_not_exists('public.directus_files', 'directus_files_folder_foreign',
@@ -996,8 +1083,8 @@ SELECT public.create_constraint_if_not_exists('public.directus_panels', 'directu
                                               'FOREIGN KEY (dashboard) REFERENCES public.directus_dashboards (id) ON DELETE CASCADE');
 SELECT public.create_constraint_if_not_exists('public.directus_panels', 'directus_panels_user_created_foreign',
                                               'FOREIGN KEY (user_created) REFERENCES public.directus_users (id) ON DELETE SET NULL');
-SELECT public.create_constraint_if_not_exists('public.directus_permissions', 'directus_permissions_role_foreign',
-                                              'FOREIGN KEY (role) REFERENCES public.directus_roles (id) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_permissions', 'directus_permissions_policy_foreign',
+                                              'FOREIGN KEY (policy) REFERENCES public.directus_policies(id) ON DELETE CASCADE');
 SELECT public.create_constraint_if_not_exists('public.directus_presets', 'directus_presets_role_foreign',
                                               'FOREIGN KEY (role) REFERENCES public.directus_roles (id) ON DELETE CASCADE');
 SELECT public.create_constraint_if_not_exists('public.directus_presets', 'directus_presets_user_foreign',
@@ -1008,6 +1095,8 @@ SELECT public.create_constraint_if_not_exists('public.directus_revisions', 'dire
                                               'FOREIGN KEY (parent) REFERENCES public.directus_revisions (id)');
 SELECT public.create_constraint_if_not_exists('public.directus_revisions', 'directus_revisions_version_foreign',
                                               'FOREIGN KEY (version) REFERENCES public.directus_versions (id) ON DELETE CASCADE');
+SELECT public.create_constraint_if_not_exists('public.directus_roles', 'directus_roles_parent_foreign',
+                                              'FOREIGN KEY (parent) REFERENCES public.directus_roles(id)');
 SELECT public.create_constraint_if_not_exists('public.directus_sessions', 'directus_sessions_share_foreign',
                                               'FOREIGN KEY (share) REFERENCES public.directus_shares (id) ON DELETE CASCADE');
 SELECT public.create_constraint_if_not_exists('public.directus_sessions', 'directus_sessions_user_foreign',
