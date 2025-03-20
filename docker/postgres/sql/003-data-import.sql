@@ -256,8 +256,8 @@ COPY tmp FROM '/docker-entrypoint-initdb.d/dlp_slozeni.json';
 
 TRUNCATE composition CASCADE;
 
-INSERT INTO composition(code, ingredient, "order", sign, amount_from, amount, unit)
-SELECT q.code, q.ingredient, q."order", q.sign, q.amount_from, q.amount, q.unit
+INSERT INTO composition(drug_code, ingredient_code, "order", sign, amount_from, amount, unit)
+SELECT q.drug_code, q.ingredient_code, q."order", q.sign, q.amount_from, q.amount, q.unit
 FROM tmp,
      json_populate_record(null::composition, c::json) AS q;
 

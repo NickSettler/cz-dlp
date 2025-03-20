@@ -52,14 +52,14 @@ CREATE TABLE IF NOT EXISTS public.atc
 
 CREATE TABLE IF NOT EXISTS public.composition
 (
-    id          integer              NOT NULL,
-    code        character varying(7) NOT NULL,
-    ingredient  character varying(255),
-    "order"     integer              NOT NULL,
-    sign        character varying(255),
-    amount_from character varying(255),
-    amount      character varying(255),
-    unit        character varying(255)
+    id              integer              NOT NULL,
+    drug_code       character varying(7) NOT NULL,
+    ingredient_code character varying(255),
+    "order"         integer              NOT NULL,
+    sign            character varying(255),
+    amount_from     character varying(255),
+    amount          character varying(255),
+    unit            character varying(255)
 );
 
 CREATE TABLE IF NOT EXISTS public.composition_sign
@@ -312,6 +312,7 @@ SELECT public.create_constraint_if_not_exists('public.units', 'units_pkey', 'PRI
 
 SELECT public.create_constraint_if_not_exists('public.composition', 'composition_ingredient_foreign',
                                               'FOREIGN KEY (ingredient) REFERENCES public.ingredients (code) ON DELETE SET NULL');
+                                              'FOREIGN KEY (ingredient_code) REFERENCES public.ingredients (code) ON DELETE SET NULL');
 SELECT public.create_constraint_if_not_exists('public.composition', 'composition_sign_foreign',
                                               'FOREIGN KEY (sign) REFERENCES public.composition_sign (code) ON DELETE SET NULL');
 SELECT public.create_constraint_if_not_exists('public.composition', 'composition_unit_foreign',

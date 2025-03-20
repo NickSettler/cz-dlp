@@ -182,8 +182,8 @@ export type TRegistrationProcedure = {
 
 export type TComposition = {
   id: number;
-  code: string;
-  ingredient?: TIngredient;
+  drug_code: TDrug;
+  ingredient_code?: TIngredient;
   order: number;
   sign?: TCompositionSign;
   amount?: string;
