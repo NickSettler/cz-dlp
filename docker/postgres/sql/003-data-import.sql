@@ -294,11 +294,4 @@ SELECT q.*
 FROM tmp,
      json_populate_record(null::drugs, c::json) AS q;
 
-INSERT INTO drugs_ingredients (drugs_code, ingredients_code)
-SELECT
-    c::json->>'code',
-    unnest(string_to_array(c::json->>'ingredients', ','))
-FROM tmp
-ON CONFLICT ON CONSTRAINT unique_drug_ingredient DO NOTHING;
-
 DROP TABLE tmp;

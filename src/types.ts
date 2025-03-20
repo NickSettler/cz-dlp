@@ -17,7 +17,6 @@ export enum E_COLLECTIONS {
   HORMONES = 'hormones',
   DOCUMENTS = 'documents',
   DRUGS = 'drugs',
-  DRUGS_INGREDIENTS = 'drugs_ingredients',
   VPOIS = 'VPOIS',
   LEGAL_REGISTRATION_BASE = 'legal_registration_base',
   REGISTRATION_STATUS = 'registration_status',
@@ -144,12 +143,6 @@ export type TDrug = {
   prescription_limitation?: string;
 };
 
-export type TDrugIngredient = {
-  id: number;
-  drugs_code: string;
-  ingredients_code: string;
-};
-
 export type THormone = {
   code: string;
   name: string;
@@ -264,7 +257,6 @@ export type TSingleSchema = {
   [E_COLLECTIONS.HORMONES]: THormone;
   [E_COLLECTIONS.DOCUMENTS]: Record<string, never>;
   [E_COLLECTIONS.DRUGS]: TDrug;
-  [E_COLLECTIONS.DRUGS_INGREDIENTS]: TDrugIngredient;
   [E_COLLECTIONS.VPOIS]: TVPOIS;
   [E_COLLECTIONS.LEGAL_REGISTRATION_BASE]: TLegalRegistrationBase;
   [E_COLLECTIONS.REGISTRATION_STATUS]: TRegistrationStatus;

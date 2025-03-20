@@ -262,21 +262,8 @@ CREATE SEQUENCE IF NOT EXISTS public.composition_id_seq
 
 ALTER SEQUENCE public.composition_id_seq OWNED BY public.composition.id;
 
-CREATE SEQUENCE IF NOT EXISTS public.drugs_ingredients_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-ALTER SEQUENCE public.drugs_ingredients_id_seq OWNED BY public.drugs_ingredients.id;
-
 ALTER TABLE ONLY public.composition
     ALTER COLUMN id SET DEFAULT nextval('public.composition_id_seq'::regclass);
-ALTER TABLE ONLY public.drugs_ingredients
-    ALTER COLUMN id SET DEFAULT nextval('public.drugs_ingredients_id_seq'::regclass);
-
 
 
 SELECT public.create_constraint_if_not_exists('public."VPOIS"', 'vpois_pkey', 'PRIMARY KEY (code)');
@@ -288,7 +275,6 @@ SELECT public.create_constraint_if_not_exists('public.country', 'country_pkey', 
 SELECT public.create_constraint_if_not_exists('public.dispense', 'dispense_pkey', 'PRIMARY KEY (code)');
 SELECT public.create_constraint_if_not_exists('public.doping', 'doping_pkey', 'PRIMARY KEY (doping)');
 SELECT public.create_constraint_if_not_exists('public.dosage_form', 'dosage_form_pkey', 'PRIMARY KEY (form)');
-SELECT public.create_constraint_if_not_exists('public.drugs_ingredients', 'drugs_ingredients_pkey', 'PRIMARY KEY (id)');
 SELECT public.create_constraint_if_not_exists('public.drug_type', 'drug_type_pkey', 'PRIMARY KEY (type)');
 SELECT public.create_constraint_if_not_exists('public.drugs', 'drugs_pkey', 'PRIMARY KEY (code)');
 SELECT public.create_constraint_if_not_exists('public.forms', 'forms_pkey', 'PRIMARY KEY (form)');
