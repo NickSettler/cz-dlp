@@ -38,6 +38,7 @@ ADD docker/postgres/postgresql.conf /etc/postgresql/
 
 ADD docker/postgres/sql/001-pure.sql /docker-entrypoint-initdb.d
 ADD docker/postgres/sql/003-data-import.sql /docker-entrypoint-initdb.d
+ADD docker/postgres/sql/099-final.sql /docker-entrypoint-initdb.d
 
 COPY --from=download ${TRANSFORMED_DIRECTORY} /docker-entrypoint-initdb.d
 
