@@ -24,7 +24,7 @@ export const transformFile = async (
     return;
   }
 
-  const headerMap = MAIN_MAP[fileName]?.headersMap;
+  const headerMap = MAIN_MAP[fileName.replaceAll('_', '')]?.headersMap;
 
   if (!headerMap) {
     throw new Error(`No header map found for file ${fileName}`);
